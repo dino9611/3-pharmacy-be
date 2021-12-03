@@ -5,7 +5,7 @@ exports.getRoot = async (req, res, next) => {
   try {
     conn = await pool.getConnection();
 
-    sql = 'SHOW PROCESSLIST;';
+    sql = 'SHOW TABLES;';
     const [result] = await conn.query(sql);
 
     conn.release();
