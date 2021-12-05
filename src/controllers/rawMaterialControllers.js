@@ -67,9 +67,6 @@ exports.readRawMaterial = async (req, res) => {
 
     if (raw_material_id) {
       // * get specific raw material
-      // SELECT
-      // id, materialName, inventory DIV unitPerBottle AS bottles, MOD(inventory, unitPerBottle) AS remainderInUnit,
-      // unitPerBottle, priceRpPerUnit, unit
       sql = `
       SELECT *
       FROM raw_material
@@ -152,11 +149,13 @@ exports.updateRawMaterial = async (req, res) => {
       )[0];
     }
     // * update priceRpPerUnit
-    // let handlePriceChange;
-    // if (priceRpPerUnit) {
-    //   sql = 'CALL handle_update_priceRpPerUnit(?, ?, ?);';
-    //   handlePriceChange = (await conn.query(sql, [id, , admin_id]))[0];
-    // }
+    let handlePriceChange;
+    if (priceRpPerUnit) {
+      sql = 'CALL handle_update_priceRpPerUnit(?, ?, ?);';
+      handlePriceChange = (
+        await conn.query(sql, [id, priceRpPerUnit, admin_id])
+      )[0];
+    }
 
     // ! straight forward updates
     let result;
@@ -173,7 +172,7 @@ exports.updateRawMaterial = async (req, res) => {
     }
 
     conn.release();
-    res.status(200).json({ result, handleBottleChange });
+    res.status(200).json({ result, handleBottleChange, handlePriceChange });
   } catch (error) {
     conn.release();
     res.status(500).json({ message: error.message });
