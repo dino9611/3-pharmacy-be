@@ -7,6 +7,6 @@ const uploadFile = uploader("/avatar", "AVA").fields([
 ]);
 
 router.patch('/edit/:id', uploadFile, editProfile)
-// router.patch('/editavatar/:id', uploadFile, editAvatar)
+router.patch('/editavatar/:id', uploadFile, editAvatar)
 
 module.exports = router

@@ -55,40 +55,40 @@ module.exports = {
             msc.release()
             return res.status(500).send({ message: error.message });
         }
+    },
+    editAvatar: async (req, res) => {
+        const { id } = req.params
+        const msc = await pool.getConnection()
+        const { avatar } = req.files
+        let path = '/avatar'
+        let imagePath = avatar ? `${path}/${avatar[0].filename}` : null
+        let sql
+        try {
+            sql = `select * from user where id = ?`
+            let [doesExist] = await msc.query(sql, id)
+            if (!doesExist.length) {
+                msc.release()
+                return res.status(200).send([])
+            }
+            sql = `update user set ? where id = ?`
+            let dataAvatar = {}
+            if (imagePath) {
+                if (doesExist[0].avatar) {
+                    fs.unlinkSync("./public" + doesExist[0].avatar);
+                }
+                dataAvatar.avatar = imagePath
+            }
+            await msc.query(sql, [dataAvatar, id])
+            sql = `select * from user where id = ?`
+            let [result] = await msc.query(sql, id)
+            msc.release()
+            return res.status(200).send(result);
+        } catch (error) {
+            msc.release()
+            if (imagePath) {
+                fs.unlinkSync("./public" + imagePath);
+            }
+            return res.status(500).send({ message: error.message });
+        }
     }
-    // editAvatar: async (req, res) => {
-    //     const { id } = req.params
-    //     const msc = await pool.getConnection()
-    //     const { avatar } = req.files
-    //     let path = '/avatar'
-    //     let imagePath = avatar ? `${path}/${avatar[0].filename}` : null
-    //     let sql
-    //     try {
-    //         sql = `select * from user where id = ?`
-    //         let [doesExist] = await msc.query(sql, id)
-    //         if (!doesExist.length) {
-    //             msc.release()
-    //             return res.status(200).send([])
-    //         }
-    //         sql = `update user set ? where id = ?`
-    //         let dataAvatar = {}
-    //         if (imagePath) {
-    //             if (doesExist[0].avatar) {
-    //                 fs.unlinkSync("./public" + doesExist[0].avatar);
-    //             }
-    //             dataAvatar.avatar = imagePath
-    //         }
-    //         await msc.query(sql, [dataAvatar, id])
-    //         sql = `select * from user where id = ?`
-    //         let [result] = await msc.query(sql, id)
-    //         msc.release()
-    //         return res.status(200).send(result);
-    //     } catch (error) {
-    //         msc.release()
-    //         if (imagePath) {
-    //             fs.unlinkSync("./public" + imagePath);
-    //         }
-    //         return res.status(500).send({ message: error.message });
-    //     }
-    // }
 };
