@@ -1,0 +1,14 @@
+### test get
+GET http://localhost:2003 HTTP/1.1
+Content-Type: application/json
+
+### Test Register
+POST http://localhost:2003/auth/register HTTP/1.1
+Content-Type: application/json
+
+{
+    "username" : "testacc",
+    "password" : "890",
+    "email": "arianzasgovar@yahoo.com",
+    "firstName" : "Patient"
+}
