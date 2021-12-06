@@ -64,12 +64,15 @@ module.exports = {
         let imagePath = avatar ? `${path}/${avatar[0].filename}` : null
         let sql
         try {
+            // cek apakah akun yang dituju ada
             sql = `select * from user where id = ?`
             let [doesExist] = await msc.query(sql, id)
+            // kalo ga ada, send array kosong
             if (!doesExist.length) {
                 msc.release()
                 return res.status(200).send([])
             }
+            // kalo ada, isi path gambar ke dalam objek yg nantinya utk query sql
             sql = `update user set ? where id = ?`
             let dataAvatar = {}
             if (imagePath) {
@@ -79,6 +82,7 @@ module.exports = {
                 dataAvatar.avatar = imagePath
             }
             await msc.query(sql, [dataAvatar, id])
+            // get updated data
             sql = `select * from user where id = ?`
             let [result] = await msc.query(sql, id)
             msc.release()
