@@ -8,15 +8,15 @@ const uploader = (destination, filenamePrefix) => {
   let defaultPath = './public';
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      console.log('line 10 isi file : ', file);
+      // console.log('line 10 isi file : ', file);
       const dir = defaultPath + destination;
-      console.log('dir :', dir);
+      // console.log('dir :', dir);
       if (fs.existsSync(dir)) {
-        console.log(dir, 'exist');
+        // console.log(dir, 'exist');
         cb(null, dir);
       } else {
         fs.mkdir(dir, { recursive: true }, (err) => cb(err, dir));
-        console.log(dir, 'make');
+        // console.log(dir, 'make');
       }
     },
     filename: (req, file, cb) => {

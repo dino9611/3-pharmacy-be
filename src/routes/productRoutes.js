@@ -13,9 +13,25 @@ const productImgUploader = uploader('/products', 'PROD').fields([
   { name: 'image', maxCount: 3 },
 ]);
 
+const testBodyData = (req, res, next) => {
+  req.body.data = {
+    productName: 'catropil',
+    stock: 11111,
+    description: 'description',
+    categories: [1, 2, 4], // array of product_category_id
+    compositions: [
+      [1, 1.3],
+      [2, 3.1],
+      [3, 6.9],
+    ], // array of [raw_material_id, amountInUnit]
+  };
+  req.body.data = JSON.stringify(req.body.data);
+  next();
+};
+
 // ? admin request
-route.post('/', productImgUploader, createProduct);
-// ? admin request
+route.post('/', productImgUploader, testBodyData, createProduct);
+// ? user request
 // route.get('/:product_id?', readProduct);
 // ? admin request
 // route.get('/composition/:product_id', readProductComposition);

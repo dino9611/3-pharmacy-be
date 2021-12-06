@@ -12,15 +12,13 @@ exports.createProduct = async (req, res) => {
   // * req.body.data
   const {
     productName,
-    productPriceRp,
     stock,
     description,
-    categories, // array of product_category_id
-    compositions, // array of amountInUnit and raw_material_id
+    categories, // array of [product_category_id]
+    compositions, // array of [raw_material_id, amountInUnit]
   } = data;
   if (
     !productName ||
-    !productPriceRp ||
     !stock ||
     !description ||
     !categories.length ||
@@ -39,17 +37,44 @@ exports.createProduct = async (req, res) => {
       productName,
       imagePath,
       description,
+      // stock,
     };
     sql = `
     INSERT INTO product
     SET ?;`;
     const [result] = await conn.query(sql, insertData);
 
+    const productId = result.insertId;
+    const admin_id = 1;
+
     // * create product compositions
-    // insertData = {};
+    for (let i = 0; i < compositions.length; i++) {
+      let el = compositions[i];
+      await conn.query('CALL handle_create_composition(?, ?, ?, ?);', [
+        productId,
+        el[0], // raw_material_id
+        el[1], // amountInUnit
+        admin_id,
+      ]);
+    }
+
+    // * create product categories
+    for (let i = 0; i < categories.length; i++) {
+      await conn.query(
+        'INSERT INTO product_has_category(product_id, product_category_id) VALUES(?, ?);',
+        [
+          productId,
+          categories[i], // product_category_id
+        ]
+      );
+    }
+
+    // * set stock
+    sql = 'CALL handle_update_stock(?, ?, ?);';
+    await conn.query(sql, [productId, stock, admin_id]);
 
     conn.release();
-    res.status(200).json({ result });
+    res.status(200).json({ productId });
   } catch (error) {
     fs.unlinkSync('./public' + imagePath);
     conn.release();
@@ -57,3 +82,20 @@ exports.createProduct = async (req, res) => {
     console.log(error);
   }
 };
+
+// exports.readProduct = async (req, res) => {
+//   const { product_id } = req.params;
+//   let conn, sql;
+//   try {
+//     conn = await pool.getConnection();
+//     sql = 'SELECT * FROM product WHERE id = ?;';
+//     const [result] = await conn.query(sql, product_id);
+
+//     conn.release();
+//     res.status(200).json({ result });
+//   } catch (error) {
+//     conn.release();
+//     res.status(500).json({ message: error.message });
+//     console.log(error);
+//   }
+// };
