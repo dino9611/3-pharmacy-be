@@ -4,15 +4,14 @@ const { authRoutes, profileRoutes } = require('./src/routes');
 const app = express();
 const PORT = process.env.PORT || 2003;
 const mysql = require("./src/connections/db")
+const cors = require("cors")
 
-app.use(express.json());
+
 
 app.use(cors());
 // ! body parse
-app.use(express.json());
 
 
-app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
