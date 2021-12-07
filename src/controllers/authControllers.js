@@ -1,6 +1,6 @@
 const mysql = require("../connections/db")
 const { createToken, transporter } = require("../helpers")
-const { createTokenEmail } = createToken
+const { createTokenEmail, createAccessToken } = createToken
 const handlebars = require('handlebars')
 const path = require("path")
 const fs = require("fs")
@@ -199,6 +199,30 @@ module.exports = {
             let [result] = await msc.query(sql, [username, email])
             const match = await bcrypt.compare(password, result[0].password);
             if (!match) {
+                msc.release()
+                return res.status(200).send([])
+            }
+            const accessTokenData = {
+                id: result[0].id,
+                username: result[0].username,
+                role: result[0].role
+            }
+            const accessToken = createAccessToken(accessTokenData)
+            res.set("access-token", accessToken)
+            msc.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            msc.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    keepLoggedIn: async (req, res) => {
+        const { id } = req.user
+        const msc = await mysql.getConnection()
+        try {
+            let sql = `select * from user where id = ?`
+            let [result] = await msc.query(sql, id)
+            if (!result.length) {
                 msc.release()
                 return res.status(200).send([])
             }
