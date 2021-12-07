@@ -1,6 +1,6 @@
 const authControllers = require("./authControllers")
 
 
-module.exports= {
+module.exports = {
     authControllers
 }
