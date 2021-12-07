@@ -29,6 +29,7 @@ module.exports = {
 
             //! Below is how to hash password with bcrypt
             const hashPassword = bcrypt.hashSync(password, saltRounds)
+            
             console.log(username, 'username belum terdaftar')
             sql = 'insert into user set ?'
             let dataInsert = {
