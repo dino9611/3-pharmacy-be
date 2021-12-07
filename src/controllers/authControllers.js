@@ -193,7 +193,7 @@ module.exports = {
     },
     logIn: async (req, res) => {
         const { username, email, password } = req.body
-        const msc = await pool.getConnection()
+        const msc = await mysql.getConnection()
         try {
             let sql = `select * from user where username = ? or email = ?`
             let [result] = await msc.query(sql, [username, email])
@@ -209,4 +209,4 @@ module.exports = {
             return res.status(500).send({ message: error.message })
         }
     }
-}
+};
