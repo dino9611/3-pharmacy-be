@@ -14,7 +14,7 @@ module.exports = {
     register: async (req, res) => {
         const { username, email, password, firstName } = req.body
         const conn = await mysql.getConnection()
-
+        const saltRounds = 10
         try {
             await conn.beginTransaction()
             let sql = 'select id from user where username = ? '
@@ -22,17 +22,19 @@ module.exports = {
             if (dataUser.length) {
                 throw { message: "Username telah digunakan" }
             }
-
+            
             //! below is how to set data in node cache that stored in RAM
             const data = { date: new Date().toISOString(), username: username }
             verifyCache.set(username, data, 10000)
 
+            //! Below is how to hash password with bcrypt
+            const hashPassword = bcrypt.hashSync(password, saltRounds)
             console.log(username, 'username belum terdaftar')
             sql = 'insert into user set ?'
             let dataInsert = {
                 username,
                 email,
-                password,
+                hashPassword,
                 firstName
             }
             const [result] = await conn.query(sql, [dataInsert])
