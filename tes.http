@@ -1,0 +1,22 @@
+### test get
+GET http://localhost:2003 HTTP/1.1
+Content-Type: application/json
+
+### Test Register
+POST http://localhost:2003/auth/register HTTP/1.1
+Content-Type: application/json
+
+{
+    "username" : "testacc212111112",
+    "password" : "890",
+    "email": "tespp@gg.cy211111112",
+    "firstName" : "Patient"
+}
+
+### test token email
+GET http://localhost:2003/auth/verified HTTP/1.1
+Content-Type: application/json
+
+{
+    "token" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMS0xMi0wNlQwOToxMzoxOC4zNTdaIiwidXNlcm5hbWUiOiJ0ZXN0YWNjMjEyMTExMTEyIiwiaWF0IjoxNjM4NzgxOTk4LCJleHAiOjE2Mzg3ODI4OTh9.p4Nb_6gzu1LO-W8AvytpjnG4Fx2w8b8S-F6aPZXgMyw"
+}

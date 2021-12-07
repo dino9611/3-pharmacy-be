@@ -3,14 +3,6 @@ POST http://localhost:2003/auth/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "username": "jaki",
-    "password": "mantabgan"
-}
-
-### Edit
-PATCH http://localhost:2003/profile/edit/2 HTTP/1.1
-Content-Type: application/json
-
-{
-    "gender": "male"
+    "email": "admin@gmail.com",
+    "password": "admin"
 }
