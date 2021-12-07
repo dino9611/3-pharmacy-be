@@ -197,6 +197,10 @@ module.exports = {
         try {
             let sql = `select * from user where username = ? or email = ?`
             let [result] = await msc.query(sql, [username, email])
+            if (!result.length) {
+                msc.release()
+                return res.status(200).send([])
+            }
             const match = await bcrypt.compare(password, result[0].password);
             if (!match) {
                 msc.release()
