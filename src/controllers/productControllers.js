@@ -83,6 +83,36 @@ exports.createProduct = async (req, res) => {
   }
 };
 
+exports.getProducts = async (req, res) => {
+  const msc = await pool.getConnection()
+  let sql
+  try {
+    sql = `select * from product`
+    let [result] = await msc.query(sql)
+    msc.release()
+    return res.status(200).send(result)
+  } catch (error) {
+    msc.release()
+    return res.status(500).send({ message: error.message })
+  }
+}
+
+exports.getProductsPagination = async (req, res) => {
+  const { rowsPerPage, page } = req.params
+  console.log(req.params);
+  const msc = await pool.getConnection()
+  let sql
+  try {
+    sql = `select * from product limit ? offset ?`
+    let [result] = await msc.query(sql, [parseInt(rowsPerPage), parseInt(page)])
+    msc.release()
+    return res.status(200).send(result)
+  } catch (error) {
+    msc.release()
+    return res.status(500).send({ message: error.message })
+  }
+}
+
 // exports.readProduct = async (req, res) => {
 //   const { product_id } = req.params;
 //   let conn, sql;
