@@ -5,8 +5,14 @@ const app = express();
 const PORT = process.env.PORT || 2003;
 const mysql = require('./src/connections/db');
 const cors = require('cors');
+const bearer = require('express-bearer-token');
 
-app.use(cors());
+app.use(bearer());
+app.use(
+  cors({
+    exposedHeaders: ['access-token'],
+  })
+);
 // ! body parse
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
