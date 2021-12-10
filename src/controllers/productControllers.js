@@ -147,19 +147,42 @@ exports.AdminGetProductsPagination = async (req, res) => {
 
 // get all products
 exports.getProducts = async (req, res) => {
-  const { kategori } = req.query
+  const { search, kategori } = req.query
   const msc = await pool.getConnection()
   let sql
   try {
     sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
     join product_has_category ph on p.id = ph.product_id
     join product_category pc on ph.product_category_id = pc.id`
+
+    // jika ada query search maka :
+    if (search) {
+      sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      join product_has_category ph on p.id = ph.product_id
+      join product_category pc on ph.product_category_id = pc.id group by p.productName`
+      if (parseInt(kategori)) {
+        sql = ` select * from (SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+          join product_has_category ph on p.id = ph.product_id
+          join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
+      }
+      sql += `) as sn where sn.productName like '${search}%'`
+
+      // jika ada query search dan kategori maka :
+      if (parseInt(kategori)) {
+        let [result] = await msc.query(sql, [parseInt(kategori)])
+        msc.release()
+        return res.status(200).send(result)
+      }
+      let [result] = await msc.query(sql)
+      msc.release()
+      return res.status(200).send(result)
+    }
+
+    // jika hanya query kategory
     if (parseInt(kategori)) {
       sql = `SELECT p.id, p.productName, pc.categoryName, pc.id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
-    }
-    if (parseInt(kategori)) {
       let [result] = await msc.query(sql, parseInt(kategori))
       msc.release()
       return res.status(200).send(result)
@@ -177,19 +200,60 @@ exports.getProducts = async (req, res) => {
 // get paginated product list for everyone
 exports.getProductsPagination = async (req, res) => {
   const { page } = req.params
-  const { filter, kategori } = req.query
+  const { search, filter, kategori } = req.query
   const msc = await pool.getConnection()
   let sql
   try {
+    // jika tidak ada query
     sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
     join product_has_category ph on p.id = ph.product_id
-    join product_category pc on ph.product_category_id = pc.id`
-    sql += ' group by p.productName'
+    join product_category pc on ph.product_category_id = pc.id
+    group by p.productName`
+
+    // jika ada query search
+    if (search) {
+      sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      join product_has_category ph on p.id = ph.product_id
+      join product_category pc on ph.product_category_id = pc.id group by p.productName`
+
+      // jika ada query search dan kategori
+      if (parseInt(kategori)) {
+        sql = ` select * from (SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+          join product_has_category ph on p.id = ph.product_id
+          join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
+      }
+
+      // jika ada query search dan kategori dan filter
+      if (filter === 'lowest') {
+        sql += ' order by p.productPriceRp asc'
+      }
+      if (filter === 'highest') {
+        sql += ' order by p.productPriceRp desc'
+      }
+      if (filter === 'default') {
+        sql += ' order by p.id asc'
+      }
+      sql += `) as sn where sn.productName like '${search}%'`
+      if (parseInt(kategori)) {
+        sql += ' limit ? offset ?'
+        let [result] = await msc.query(sql, [parseInt(kategori), 8, parseInt(page)])
+        msc.release()
+        return res.status(200).send(result)
+      }
+      sql += ' limit ? offset ?'
+      let [result] = await msc.query(sql, [8, parseInt(page)])
+      msc.release()
+      return res.status(200).send(result)
+    }
+
+    // jika ada query kategori
     if (parseInt(kategori)) {
       sql = `SELECT p.id, p.productName, pc.categoryName, pc.id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
     }
+
+    // jika ada query filter
     if (filter === 'lowest') {
       sql += ' order by p.productPriceRp asc'
     }
@@ -200,10 +264,12 @@ exports.getProductsPagination = async (req, res) => {
       sql += ' order by p.id asc'
     }
     if (parseInt(kategori)) {
+      sql += ' limit ? offset ?'
       let [result] = await msc.query(sql, [parseInt(kategori), 8, parseInt(page)])
       msc.release()
       return res.status(200).send(result)
     }
+    // jika tidak ada query
     sql += ' limit ? offset ?'
     let [result] = await msc.query(sql, [8, parseInt(page)])
     msc.release()
