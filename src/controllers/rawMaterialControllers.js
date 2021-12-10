@@ -132,7 +132,7 @@ exports.updateRawMaterial = async (req, res) => {
   if (
     !(materialName || bottleChange || unitPerBottle || priceRpPerUnit || unit)
   )
-    res.status(400).json({ message: 'invalid request input' });
+    return res.status(400).json({ message: 'invalid request input' });
 
   let conn, sql;
   try {
@@ -143,7 +143,7 @@ exports.updateRawMaterial = async (req, res) => {
     // * update inventory
     let handleBottleChange;
     if (bottleChange) {
-      sql = 'CALL handle_update_inventory_bottle(?, ?, ?);';
+      sql = 'CALL handle_update_inventory(?, ?, ?);';
       handleBottleChange = (
         await conn.query(sql, [raw_material_id, bottleChange, admin_id])
       )[0];
