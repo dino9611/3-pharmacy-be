@@ -165,7 +165,7 @@ exports.getProductsPagination = async (req, res) => {
 
 // ! UPDATE
 exports.updateProduct = async (req, res) => {
-  req.body.data = JSON.stringify({ stock: 0 });
+  // req.body.data = JSON.stringify({ stock: 0 });
   const { product_id } = req.params;
 
   const data = JSON.parse(req.body.data);
