@@ -130,17 +130,12 @@ exports.readProduct = async (req, res) => {
   }
 };
 exports.readProductCategories = async (req, res) => {
-  let conn, sql;
   try {
-    conn = await pool.getConnection();
+    let sql = 'SELECT * FROM product_category;';
+    const [result] = await pool.query(sql);
 
-    sql = 'SELECT * FROM product_category;';
-    const [result] = await conn.query(sql);
-
-    conn.release();
     res.status(200).json({ result });
   } catch (error) {
-    conn.release();
     res.status(500).json({ message: error.message });
     console.log(error);
   }
