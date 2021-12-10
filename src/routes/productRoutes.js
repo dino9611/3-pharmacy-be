@@ -1,9 +1,11 @@
 const express = require('express');
 const {
-  createProduct, getProducts, getProductsPagination,
-  // readProduct,
+  createProduct,
+  getProducts,
+  getProductsPagination,
+  readProduct,
   // readProductComposition,
-  // updateProduct,
+  updateProduct,
 } = require('../controllers/productControllers');
 const uploader = require('../helpers/uploader');
 // const {} = require('../helpers/verifyJWT');
@@ -13,32 +15,16 @@ const productImgUploader = uploader('/products', 'PROD').fields([
   { name: 'image', maxCount: 3 },
 ]);
 
-const testBodyData = (req, res, next) => {
-  req.body.data = {
-    productName: 'catropil',
-    stock: 11111,
-    description: 'description',
-    categories: [1, 2, 4], // array of product_category_id
-    compositions: [
-      [1, 1.3],
-      [2, 3.1],
-      [3, 6.9],
-    ], // array of [raw_material_id, amountInUnit]
-  };
-  req.body.data = JSON.stringify(req.body.data);
-  next();
-};
-
 // ? admin request
-route.post('/', productImgUploader, testBodyData, createProduct);
-// ? user request
-// route.get('/:product_id?', readProduct);
+route.post('/', productImgUploader, createProduct);
 // ? admin request
+route.get('/:product_id?', readProduct);
+// ? admin/user request
 // route.get('/composition/:product_id', readProductComposition);
-// ? admin request
-// route.patch('/:product_id', updateProduct);
+// ? admin/user request
+route.patch('/:product_id', updateProduct);
 
-route.get("/getproducts/", getProducts)
-route.get("/getproductspagination/:rowsPerPage/:page", getProductsPagination)
+route.get('/getproducts/', getProducts);
+route.get('/getproductspagination/:rowsPerPage/:page', getProductsPagination);
 
 module.exports = route;
