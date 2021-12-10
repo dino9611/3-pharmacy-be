@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  createProduct, getProducts, getProductsPagination,
+  createProduct, getProducts, getProductsPagination, getCategories, AdminGetProducts, AdminGetProductsPagination,
   // readProduct,
   // readProductComposition,
   // updateProduct,
@@ -38,7 +38,12 @@ route.post('/', productImgUploader, testBodyData, createProduct);
 // ? admin request
 // route.patch('/:product_id', updateProduct);
 
+route.get("/getcategories", getCategories)
+// admin
+route.get('/admingetproducts', AdminGetProducts)
+route.get("/getproductspagination/:rowsPerPage/:page", AdminGetProductsPagination)
+// user
 route.get("/getproducts/", getProducts)
-route.get("/getproductspagination/:rowsPerPage/:page", getProductsPagination)
+route.get("/gethomepagination/:page", getProductsPagination)
 
 module.exports = route;
