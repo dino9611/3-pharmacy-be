@@ -129,6 +129,22 @@ exports.readProduct = async (req, res) => {
     console.log(error);
   }
 };
+exports.readProductCategories = async (req, res) => {
+  let conn, sql;
+  try {
+    conn = await pool.getConnection();
+
+    sql = 'SELECT * FROM product_category;';
+    const [result] = await conn.query(sql);
+
+    conn.release();
+    res.status(200).json({ result });
+  } catch (error) {
+    conn.release();
+    res.status(500).json({ message: error.message });
+    console.log(error);
+  }
+};
 
 exports.getProducts = async (req, res) => {
   const msc = await pool.getConnection();
