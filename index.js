@@ -5,13 +5,13 @@ const app = express();
 const PORT = process.env.PORT || 2003;
 const mysql = require("./src/connections/db")
 const cors = require("cors")
-
+const bearerToken = require ('express-bearer-token')
 
 
 app.use(cors());
 // ! body parse
 
-
+app.use(bearerToken());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

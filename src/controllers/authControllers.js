@@ -4,17 +4,18 @@ const { createTokenEmail } = createToken
 const handlebars = require('handlebars')
 const path = require("path")
 const fs = require("fs")
-const bcrypt = require('bcrypt');
 
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+//!STDTTL Pas selesai nanti jangan lupa diganti
 const NodeCache = require("node-cache")
-const verifyCache = new NodeCache({ stdTTL: 10000, checkperiod: 0 })
+const verifyCache = new NodeCache({ stdTTL: 0, checkperiod: 0 })
 
 
 module.exports = {
     register: async (req, res) => {
-        const { username, email, password, firstName } = req.body
+        const { username, email, password, firstName, lastName } = req.body
         const conn = await mysql.getConnection()
-        const saltRounds = 10
         try {
             await conn.beginTransaction()
             let sql = 'select id from user where username = ? '
@@ -35,8 +36,9 @@ module.exports = {
             let dataInsert = {
                 username,
                 email,
-                hashPassword,
-                firstName
+                password: hashPassword,
+                firstName,
+                lastName
             }
             const [result] = await conn.query(sql, [dataInsert])
             console.log(result.insertId)
@@ -80,27 +82,38 @@ module.exports = {
         }
     },
     verifyAcc: async (req, res) => {
-        const { id, date, username } = req.user
+        const { id, date, username, role } = req.user
         const getData = verifyCache.get(username)
         const conn = await mysql.getConnection()
-
+        console.log(role)
         try {
+            // disini tambahin dicek dulu udah verified atau belum
+            let sql = 'select * from user where username = ? '
+            let [dataUser] = await conn.query(sql, [username])
+            if (dataUser[0].isVerified){
+                throw {message : "User Already Verified"}
+            }
             console.log(date, "ini date dari token")
             console.log(getData.date, "ini date dari cache")
             if (date != getData.date) {
-                throw { message: "Gunakan link yang baru dong" }
+                throw { message: "Please use the latest Link" }
             }
             let updateData = {
                 isVerified: 1
             }
-            let sql = 'update user set ? where id = ? '
+            sql = 'update user set ? where id = ? '
             await conn.query(sql, [updateData, id])
             sql = 'select * from user where id = ?'
             const [userData] = await conn.query(sql, [id])
+            conn.release()
+            verifyCache.del(username)
             return res.status(200).send(userData[0])
-            // return res.status(200).send("masuk keakhir verified")
         } catch (error) {
             console.log(error)
+            if (error.message == "Cannot read property 'date' of undefined"){
+                error.message = "Link Expired!"
+            }
+            conn.release()
             return res.status(500).send({ message: error.message })
         }
     },
@@ -116,6 +129,9 @@ module.exports = {
         try {
             let sql = `select * from user where username = ? `
             let [dataUser] = await conn.query(sql, [username])
+            if (dataUser[0].isVerified){
+                throw ("User Already Verified")
+            }
             //! below is how to get data from node cache
             const getData = verifyCache.get(username)
             let dataToken = {
@@ -134,8 +150,10 @@ module.exports = {
                 subject: "Account Verification",
                 html: htmlToEmail,
             })
+            conn.release()
             return res.status(200).send({ message: 'berhasil kirim email verified' });
         } catch (error) {
+            conn.release()
             console.log(error)
             return res.status(500).send({ message: error.message })
         }
@@ -149,24 +167,33 @@ module.exports = {
             if (!userData.length) {
                 throw { message: "username tidak ditemukan" }
             }
+            //! below is how to set data in node cache that stored in RAM
+            const dataPass = { date: new Date().toISOString(), username: username }
+            verifyCache.set(userData[0].email, dataPass, 10000)
+            //! below is how to get data from node cache
+            const getDatapass = verifyCache.get(userData[0].email)
+
             let dataToken = {
                 id: userData[0].id,
-                role: userData[0].role
+                role: userData[0].role,
+                date: getDatapass.date,
+                email: userData[0].email
             }
-            conn.release()
-
+            
             let tokenEmailPassword = createTokenEmail(dataToken)
             let filepath = path.resolve(__dirname, "../template/changePassword.html")
             let htmlString = fs.readFileSync(filepath, 'utf-8')
             var template = handlebars.compile(htmlString);
             const htmlToEmail = template({ name: userData[0].username, token: tokenEmailPassword })
             // console.log(htmlToEmail)
-            await transporter.sendMail({
+            transporter.sendMail({
                 from: "Tokobat <arianzas1997@gmail.com>",
-                to: dataRes[0].email,
+                to: userData[0].email,
                 subject: "Password Change",
                 html: htmlToEmail,
             })
+            conn.release()
+            console.log("sucess kirim email")
             return res.status(200).send({ message: "Change Password Success" })
         } catch (error) {
             console.log(error)
@@ -175,22 +202,33 @@ module.exports = {
         }
     },
     changePassword: async (req, res) => {
-        const { id } = req.user
+        const { id, date, email } = req.user
         const { password } = req.body
+        const getData = verifyCache.get(email)
         const conn = await mysql.getConnection()
+        console.log(password)
         try {
+            if (date != getData.date){
+                throw {message: "Please use the latest Link"}
+            }
+            //! Below is how to hash password with bcrypt
+            const hashPassword = bcrypt.hashSync(password, saltRounds)
             let updateData = {
-                password: password
+                password: hashPassword
             }
             let sql = 'update user set ? where id = ? '
             await conn.query(sql, [updateData, id])
             sql = 'select * from user where id = ? '
             let [userData] = await conn.query(sql, [id])
             conn.release()
+            verifyCache.del(email)
             return res.status(200).send(userData[0])
         } catch (error) {
             console.log(error)
             conn.release()
+            if (error.message == "Cannot read property 'date' of undefined"){
+                error.message = "Link Expired!"
+            }
             res.status(500).send({ message: error.message || "server error" })
         }
     },
