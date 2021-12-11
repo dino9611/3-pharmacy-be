@@ -55,8 +55,8 @@ exports.createProduct = async (req, res) => {
       let el = compositions[i];
       await conn.query('CALL handle_create_composition(?, ?, ?, ?);', [
         productId,
-        parseInt(el[0]), // raw_material_id
-        parseInt(el[1]), // amountInUnit
+        parseFloat(el[0]), // raw_material_id
+        parseFloat(el[1]), // amountInUnit
         admin_id,
       ]);
     }
