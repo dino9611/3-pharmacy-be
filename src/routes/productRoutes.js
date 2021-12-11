@@ -28,7 +28,7 @@ route.get('/:product_id?', readProduct);
 // route.get('/composition/:product_id', readProductComposition);
 // ! UPDATE
 // ? admin/user request
-route.patch('/:product_id', updateProduct);
+route.patch('/', productImgUploader, updateProduct);
 
 route.get('/getproducts/', getProducts);
 route.get('/getproductspagination/:rowsPerPage/:page', getProductsPagination);

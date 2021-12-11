@@ -176,15 +176,12 @@ exports.getProductsPagination = async (req, res) => {
 
 // ! UPDATE
 exports.updateProduct = async (req, res) => {
-  // req.body.data = JSON.stringify({ stock: 0 });
-  const { product_id } = req.params;
-
   const data = JSON.parse(req.body.data);
   // * req.body.data
-  const { stock } = data;
+  const { id, stock } = data;
 
   // * no raw_material_id
-  if (!(product_id > 0))
+  if (!(id > 0))
     return res.status(400).json({ message: 'invalid request input' });
   // * atleast one updated field
   if (!(stock >= 0))
@@ -200,9 +197,7 @@ exports.updateProduct = async (req, res) => {
     let handleStockChange;
     if (stock >= 0) {
       sql = 'CALL handle_update_stock(?, ?, ?);';
-      handleStockChange = (
-        await conn.query(sql, [product_id, stock, admin_id])
-      )[0];
+      handleStockChange = (await conn.query(sql, [id, stock, admin_id]))[0];
     }
 
     // ! straight forward updates
