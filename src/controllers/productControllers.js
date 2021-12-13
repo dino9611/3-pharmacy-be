@@ -129,43 +129,41 @@ exports.readProduct = async (req, res) => {
     console.log(error);
   }
 };
-exports.readProductCategories = async (req, res) => {
-  try {
-    let sql = 'SELECT * FROM product_category;';
-    const [result] = await pool.query(sql);
 
-    res.status(200).json({ result });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    console.log(error);
-  }
-};
+// exports.readProductCategories = async (req, res) => {
+//   try {
+//     let sql = 'SELECT * FROM product_category;';
+//     const [result] = await pool.query(sql);
 
-exports.getProducts = async (req, res) => {
-  const msc = await pool.getConnection();
-  let sql;
-  try {
-    sql = `select * from product`;
-    let [result] = await msc.query(sql);
-    msc.release();
-    return res.status(200).send(result);
-  } catch (error) {
-    msc.release();
-    return res.status(500).send({ message: error.message });
-  }
-};
+//     res.status(200).json({ result });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//     console.log(error);
+//   }
+// };
+
+// exports.getProducts = async (req, res) => {
+//   const msc = await pool.getConnection();
+//   let sql;
+//   try {
+//     sql = `select * from product`;
+//     let [result] = await msc.query(sql);
+//     msc.release();
+//     return res.status(200).send(result);
+//   } catch (error) {
+//     msc.release();
+//     return res.status(500).send({ message: error.message });
+//   }
+// };
 
 // get all categories
 exports.getCategories = async (req, res) => {
-  const msc = await pool.getConnection()
   let sql
   try {
     sql = 'select * from product_category'
-    let [result] = await msc.query(sql)
-    msc.release()
+    let [result] = await pool.query(sql)
     return res.status(200).send(result)
   } catch (error) {
-    msc.release();
     return res.status(500).send({ message: error.message });
   }
 };
@@ -196,7 +194,6 @@ exports.AdminGetProducts = async (req, res) => {
 exports.AdminGetProductsPagination = async (req, res) => {
   const { rowsPerPage, page } = req.params
   const { search } = req.query
-  console.log(search);
   const msc = await pool.getConnection()
   let sql
   try {
