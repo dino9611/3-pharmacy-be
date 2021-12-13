@@ -3,29 +3,22 @@ const express = require('express');
 const { authRoutes, profileRoutes } = require('./src/routes');
 const app = express();
 const PORT = process.env.PORT || 2003;
-<<<<<<< HEAD
-const mysql = require("./src/connections/db")
+// const mysql = require("./src/connections/db")
 const cors = require("cors")
 const bearerToken = require ('express-bearer-token')
 
 
-app.use(cors());
 // ! body parse
-
-app.use(bearerToken());
-=======
-const mysql = require('./src/connections/db');
-const cors = require('cors');
-const bearer = require('express-bearer-token');
-
-app.use(bearer());
 app.use(
   cors({
     exposedHeaders: ['access-token'],
   })
 );
+
+app.use(bearerToken());
+
+
 // ! body parse
->>>>>>> develop-be
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

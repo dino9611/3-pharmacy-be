@@ -1,12 +1,13 @@
 const pool = require('../connections/db');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 const fs = require('fs');
 
 module.exports = {
     editProfile: async (req, res) => {
         const { id } = req.params
         const msc = await pool.getConnection()
-        const { username, email, password, firstName, lastName, birthdate, gender, address } = req.body
+        const {email, firstName, lastName, birthdate, gender, address } = req.body
+        console.log(email)
         let sql
         try {
             // Cek akun yg dituju ada atau ngga
@@ -15,21 +16,22 @@ module.exports = {
             // Kalo ga ada, send array kosong
             if (!doesExist.length) {
                 msc.release()
-                return res.status(200).send([])
+                // return res.status(200).send([])
+                throw { message: "Salah dibackend" }
             }
             // update user sesuai req.body yang ada
             sql = `update user set ? where id = ?`
             let dataInput = {}
-            if (username) {
-                dataInput.username = username
-            }
+            // if (username) {
+            //     dataInput.username = username
+            // }
             if (email) {
                 dataInput.email = email
             }
-            if (password) {
-                const hash = bcrypt.hashSync(password, 10)
-                dataInput.password = hash
-            }
+            // if (password) {
+            //     const hash = bcrypt.hashSync(password, 10)
+            //     dataInput.password = hash
+            // }
             if (firstName) {
                 dataInput.firstName = firstName
             }
@@ -94,5 +96,23 @@ module.exports = {
             }
             return res.status(500).send({ message: error.message });
         }
+    },
+    getUser: async (req,res) => {
+        const {id} = req.params
+        const conn = await pool.getConnection()
+        try {
+            let sql = 'select * from user where id = ? '
+            const [dataUser] = await conn.query(sql, [id])
+            if (!dataUser.length){
+                throw {mesage: "User not Found"}
+            }
+            console.log(dataUser[0].username)
+            return res.status(200).send(dataUser)
+        } catch (error) {
+            conn.release()
+            console.log(error)
+            return res.status(500).send({ message: error.message })
+        }
     }
+    
 };
