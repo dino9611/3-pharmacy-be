@@ -3,6 +3,7 @@ const express = require('express');
 const { authRoutes, profileRoutes } = require('./src/routes');
 const app = express();
 const PORT = process.env.PORT || 2003;
+
 const cors = require('cors');
 const bearer = require('express-bearer-token');
 
