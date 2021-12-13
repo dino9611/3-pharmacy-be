@@ -1,10 +1,13 @@
 const express = require('express');
 const {
   createProduct,
-  getProducts,
-  getProductsPagination,
   readProduct,
   readProductCategories,
+  getProducts,
+  getProductsPagination,
+  getCategories,
+  AdminGetProducts,
+  AdminGetProductsPagination,
   // readProductComposition,
   updateProduct,
 } = require('../controllers/productControllers');
@@ -30,7 +33,16 @@ route.get('/:product_id?', readProduct);
 // ? admin/user request
 route.patch('/', productImgUploader, updateProduct);
 
+// * zaky
+route.get('/getcategories', getCategories);
+// admin
+route.get('/admingetproducts', AdminGetProducts);
+route.get(
+  '/getproductspagination/:rowsPerPage/:page',
+  AdminGetProductsPagination
+);
+// user
 route.get('/getproducts/', getProducts);
-route.get('/getproductspagination/:rowsPerPage/:page', getProductsPagination);
+route.get('/gethomepagination/:page', getProductsPagination);
 
 module.exports = route;
