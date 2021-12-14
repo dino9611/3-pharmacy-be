@@ -154,7 +154,7 @@ exports.updateRawMaterial = async (req, res) => {
     if (priceRpPerUnit) {
       sql = 'CALL handle_update_priceRpPerUnit(?, ?, ?);';
       handlePriceChange = (
-        await conn.query(sql, [id, priceRpPerUnit, admin_id])
+        await conn.query(sql, [raw_material_id, priceRpPerUnit, admin_id])
       )[0];
     }
 
