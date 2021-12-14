@@ -3,12 +3,13 @@ const express = require('express');
 const { authRoutes, profileRoutes } = require('./src/routes');
 const app = express();
 const PORT = process.env.PORT || 2003;
-// const mysql = require("./src/connections/db")
-const cors = require("cors")
-const bearerToken = require ('express-bearer-token')
+const cors = require('cors');
+const bearer = require('express-bearer-token');
 
 
 // ! body parse
+
+
 app.use(
   cors({
     exposedHeaders: ['access-token'],
@@ -17,7 +18,7 @@ app.use(
 
 
 // ! body parse
-app.use(bearerToken());
+app.use(bearer());
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

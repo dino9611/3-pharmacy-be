@@ -102,8 +102,9 @@ exports.readRawMaterialRecord = async (req, res) => {
   try {
     conn = await pool.getConnection();
     sql = `
-    SELECT *
-    FROM raw_material_record
+    SELECT A.raw_material_id, B.materialName, A.inventoryChange, B.unitPerBottle, B.unit, A.datetime, A.admin_id
+    FROM raw_material_record A
+    JOIN raw_material B ON A.raw_material_id = B.id
     ORDER BY datetime DESC
     LIMIT ?, ?;`;
     limit = parseInt(limit);
@@ -153,7 +154,7 @@ exports.updateRawMaterial = async (req, res) => {
     if (priceRpPerUnit) {
       sql = 'CALL handle_update_priceRpPerUnit(?, ?, ?);';
       handlePriceChange = (
-        await conn.query(sql, [id, priceRpPerUnit, admin_id])
+        await conn.query(sql, [raw_material_id, priceRpPerUnit, admin_id])
       )[0];
     }
 
