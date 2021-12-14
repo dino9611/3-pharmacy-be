@@ -17,21 +17,14 @@ module.exports = {
             if (!doesExist.length) {
                 msc.release()
                 // return res.status(200).send([])
-                throw { message: "Salah dibackend" }
+                throw { message: "Server Error Edit Profile" }
             }
             // update user sesuai req.body yang ada
             sql = `update user set ? where id = ?`
             let dataInput = {}
-            // if (username) {
-            //     dataInput.username = username
-            // }
             if (email) {
                 dataInput.email = email
             }
-            // if (password) {
-            //     const hash = bcrypt.hashSync(password, 10)
-            //     dataInput.password = hash
-            // }
             if (firstName) {
                 dataInput.firstName = firstName
             }
@@ -46,6 +39,9 @@ module.exports = {
             }
             if (address) {
                 dataInput.address = address
+            }
+            if(!Object.keys(dataInput).length){
+                throw {message : "Data not changed"}
             }
             await msc.query(sql, [dataInput, id])
             // get data hasil update

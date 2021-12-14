@@ -15,10 +15,10 @@ app.use(
   })
 );
 
-app.use(bearerToken());
-
 
 // ! body parse
+app.use(bearerToken());
+app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
