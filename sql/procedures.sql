@@ -2,7 +2,7 @@
 -- * admin CREATE actions
 CALL handle_create_composition(1, 1, 5.6, 1); -- (_product_id, _raw_material_id, _amountInUnit, _admin_id)
 CALL handle_create_medicine() -- (_)
-CALL handle_accept_prescription() -- (_prescription_id, _admin_id)
+CALL handle_accept_prescription_payment() -- (_prescription_id, _admin_id)
 -- * admin READ actions
 -- CALL is_admin(1); -- (_admin_id)
 -- * admin UPDATE actions
