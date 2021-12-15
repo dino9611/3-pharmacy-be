@@ -48,7 +48,7 @@ exports.createProduct = async (req, res) => {
     const [result] = await conn.query(sql, insertData);
 
     const productId = result.insertId;
-    const admin_id = 1;
+    const admin_id = 2;
 
     // * create product compositions
     for (let i = 0; i < compositions.length; i++) {
@@ -350,9 +350,14 @@ exports.getProductsPagination = async (req, res) => {
 
 // ! UPDATE
 exports.updateProduct = async (req, res) => {
+  const {image} = req.files
+  const imagePath = image ? '/products' + `/${image[0].filename}` : null;
+  if (!imagePath){
+    throw ({message: "No Image Uploaded"})
+  }
   const data = JSON.parse(req.body.data);
   // * req.body.data
-  const { id, stock } = data;
+  const { id, stock,productName, description, categories, compositions } = data;
 
   // * no raw_material_id
   if (!(id > 0))
@@ -361,12 +366,12 @@ exports.updateProduct = async (req, res) => {
   if (!(stock >= 0))
     return res.status(400).json({ message: 'invalid request input' });
 
-  let conn, sql;
+  let conn, sql, updateData;
   try {
     conn = await pool.getConnection();
 
     // ! complex updates
-    const admin_id = 1;
+    const admin_id = 2;
     // * update stock
     let handleStockChange;
     if (stock >= 0) {
@@ -375,10 +380,43 @@ exports.updateProduct = async (req, res) => {
     }
 
     // ! straight forward updates
+    updateData = {
+      productName,
+      imagePath,
+      description
+    }
+    sql = 'insert into product set ? '
+    const [res] = await conn.query(sql, updateData)
+
+    const productId = res.insertId
+
+    //? for product compositions
+    for(let i = 0; i < compositions.length; i++){
+      let el = compositions[i]
+      await conn.query('CALL handle_create_composition(?,?,?,?)', [
+        productId,
+        parseFloat(el[0]),
+        parseFloat(el[1]),
+        admin_id
+      ])
+    }
+    //? for product categories
+    for(let i = 0; i < categories.length; i++){
+      await conn.query(
+        'INSERT INTO product_has_category(product_id, product_category_id) VALUES(?,?)',
+        [
+          productId,
+          parseInt(categories[i])
+        ]
+      )
+    }
 
     conn.release();
     res.status(200).json({ handleStockChange });
   } catch (error) {
+    if (imagePath) {
+      fs.unlinkSync("./public" + imagePath);
+    }
     conn.release();
     res.status(500).json({ message: error.message });
     console.log(error);

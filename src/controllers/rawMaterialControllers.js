@@ -30,7 +30,7 @@ exports.createRawMaterial = async (req, res) => {
     // * inventory change will be recorded to raw_material_record
     const raw_material_id = insRawMaterial.insertId;
     const inventoryChange = inventory;
-    const admin_id = 1; // ! from req.user
+    const admin_id = 2; // ! from req.user
 
     sql = 'INSERT INTO raw_material_record SET ?';
     insertData = { raw_material_id, inventoryChange, admin_id };
@@ -140,7 +140,7 @@ exports.updateRawMaterial = async (req, res) => {
     conn = await pool.getConnection();
 
     // ! complex updates
-    const admin_id = 1;
+    const admin_id = 2;
     // * update inventory
     let handleBottleChange;
     if (bottleChange) {
