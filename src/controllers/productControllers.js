@@ -180,7 +180,7 @@ exports.AdminGetProducts = async (req, res) => {
     if (search) {
       sql += ` where p.productName like '${search}%'`
     }
-    sql += ' group by p.productName order by p.id'
+    sql += ' group by p.productName order by p.updatedAt desc'
     let [result] = await msc.query(sql)
     msc.release()
     return res.status(200).send(result)
@@ -203,7 +203,7 @@ exports.AdminGetProductsPagination = async (req, res) => {
     if (search) {
       sql += ` where p.productName like '${search}%'`
     }
-    sql += ' group by p.productName order by p.id limit ? offset ?'
+    sql += ' group by p.productName order by p.updatedAt desc limit ? offset ?'
     let [result] = await msc.query(sql, [parseInt(rowsPerPage), parseInt(page)])
     msc.release()
     return res.status(200).send(result)
