@@ -1,4 +1,6 @@
 require('dotenv').config();
+require('./src/event_scheduler/checkPrescriptionPayment'); // * initialize event scheduler
+
 const express = require('express');
 const { authRoutes, profileRoutes } = require('./src/routes');
 const app = express();
@@ -24,6 +26,7 @@ app.use('/profile', profileRoutes);
 app.use('/raw_material', require('./src/routes/rawMaterialRoutes'));
 app.use('/product', require('./src/routes/productRoutes'));
 app.use('/auth', require('./src/routes/authRoutes'));
+app.use('/prescription', require('./src/routes/prescriptionRoutes'));
 
 app.all('*', (req, res) => {
   res.status(404).json({ message: 'Not Found' });
