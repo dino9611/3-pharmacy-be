@@ -43,7 +43,7 @@ module.exports = {
                 sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
                 join cart_item ci on 3_pharmacy.order.id = ci.order_id
                 join product p on ci.product_id = p.id
-                where user_id = ?`
+                where user_id = ? order by ci.createdAt desc`
                 let [result] = await pool.query(sql, user_id)
                 pool.release()
                 return res.status(200).send(result)
@@ -77,7 +77,7 @@ module.exports = {
             sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
-            where user_id = ?`
+            where user_id = ? order by ci.createdAt desc`
             let [result] = await pool.query(sql, user_id)
             pool.release()
             return res.status(200).send(result)
@@ -129,7 +129,7 @@ module.exports = {
             sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
-            where user_id = ?`
+            where user_id = ? order by ci.createdAt desc`
             let [result] = await pool.query(sql, user_id)
             pool.release()
             return res.status(200).send(result)
@@ -145,7 +145,75 @@ module.exports = {
             let sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
+            where user_id = ? order by ci.createdAt desc`
+            let [result] = await pool.query(sql, user_id)
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    editQuantity: async (req, res) => {
+        const { user_id } = req.params
+        const { product_id, qty } = req.body
+        const pool = await mysql.getConnection()
+        try {
+            // cari order_id berdasarkan user_id
+            let sql = `select * from 3_pharmacy.order where user_id = ?`
+            let [order] = await pool.query(sql, user_id)
+
+            // cek apakah product yang ingin diedit ada
+            sql = `select * from cart_item where order_id = ? and product_id = ?`
+            let [cekcart] = await pool.query(sql, [order[0].id, product_id])
+
+            // jika tidak ada, throw error
+            // jika ada, skip if
+            if (!cekcart.length) {
+                pool.release()
+                throw { message: "product is not found" }
+            }
+
+            // dapatkan stok produk dari tabel produk berdasarkan product_id atau id
+            sql = `select * from product where id = ?`
+            let [product] = await pool.query(sql, product_id)
+
+            // cek stok
+            if (cekcart[0].qty + (qty) > product.stock) {
+                pool.release()
+                throw { message: "quantity can't exceed stock" }
+            }
+            if (cekcart[0].qty + (qty) < 1) {
+                pool.release()
+                throw { message: "quantity must be above zero" }
+            }
+
+            // edit produk berdasarkan order_id dan product_id
+            sql = `update cart_item set ? where order_id = ? and product_id = ?`
+            const dataUpdate = { qty: cekcart[0].qty + (qty) }
+            await pool.query(sql, [dataUpdate, order[0].id, product_id])
+
+            // join tabel order dan item
+            // utk mendapatkan harga setiap produk yg nantinya akan ditotal tiap produk
+            sql = `SELECT * FROM 3_pharmacy.order
+            join cart_item ci on 3_pharmacy.order.id = ci.order_id
             where user_id = ?`
+            let [prices] = await pool.query(sql, user_id)
+            let totalCounter = 0
+            prices.forEach(val => {
+                totalCounter += val.price * val.qty
+            })
+
+            // update totalPrice yg ada di tabel order dengan hasil dari hitung total
+            sql = `update 3_pharmacy.order set ? where user_id = ?`
+            const updateTotal = { totalPrice: totalCounter }
+            await pool.query(sql, [updateTotal, user_id])
+
+            // get tabel cart_item berdasarkan user_id
+            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+            join cart_item ci on 3_pharmacy.order.id = ci.order_id
+            join product p on ci.product_id = p.id
+            where user_id = ? order by ci.createdAt desc`
             let [result] = await pool.query(sql, user_id)
             pool.release()
             return res.status(200).send(result)
