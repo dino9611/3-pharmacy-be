@@ -1,4 +1,4 @@
-###
+### add to cart
 POST http://localhost:2003/transaction/addtocart/2 HTTP/1.1
 Content-Type: application/json
 
@@ -8,6 +8,10 @@ Content-Type: application/json
     "product_id": 4
 }
 
-###
-DELETE http://localhost:2003/transaction/deletefromcart/2/5 HTTP/1.1
+### delete from cart
+DELETE http://localhost:2003/transaction/deletefromcart/2/7 HTTP/1.1
+Content-Type: application/json
+
+### get cart data
+GET http://localhost:2003/transaction/getcart/2 HTTP/1.1
 Content-Type: application/json
