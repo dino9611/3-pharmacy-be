@@ -40,8 +40,9 @@ module.exports = {
                 await pool.query(sql, [updateTotal, user_id])
 
                 // get tabel cart_item berdasarkan user_id
-                sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id FROM 3_pharmacy.order
+                sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
                 join cart_item ci on 3_pharmacy.order.id = ci.order_id
+                join product p on ci.product_id = p.id
                 where user_id = ?`
                 let [result] = await pool.query(sql, user_id)
                 pool.release()
@@ -73,8 +74,9 @@ module.exports = {
             await pool.query(sql, [updateTotal, user_id])
 
             // get tabel cart_item berdasarkan user_id
-            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id FROM 3_pharmacy.order
+            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
+            join product p on ci.product_id = p.id
             where user_id = ?`
             let [result] = await pool.query(sql, user_id)
             pool.release()
@@ -124,8 +126,25 @@ module.exports = {
             await pool.query(sql, [updateTotal, user_id])
 
             // get tabel cart_item berdasarkan user_id
-            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id FROM 3_pharmacy.order
+            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
+            join product p on ci.product_id = p.id
+            where user_id = ?`
+            let [result] = await pool.query(sql, user_id)
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    getCart: async (req, res) => {
+        const { user_id } = req.params
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+            join cart_item ci on 3_pharmacy.order.id = ci.order_id
+            join product p on ci.product_id = p.id
             where user_id = ?`
             let [result] = await pool.query(sql, user_id)
             pool.release()
