@@ -4,7 +4,7 @@ const schedule = require('node-schedule');
 // const job = schedule.scheduleJob('*/1 * * * * *', function (fireDate) {
 //   console.log('hello');
 // });
-const job = schedule.scheduleJob('* */5 * * * * *', async (fireDate) => {
+const job = schedule.scheduleJob('*/2 * * * *', async (fireDate) => {
   // console.log('hello' + fireDate);
   let sql, conn;
   try {
