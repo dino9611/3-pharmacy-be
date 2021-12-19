@@ -11,6 +11,8 @@ const {
   // readProductComposition,
   updateProduct,
   getDescription,
+  getEdit,
+  deleteProduct
 } = require('../controllers/productControllers');
 const uploader = require('../helpers/uploader');
 // const {} = require('../helpers/verifyJWT');
@@ -44,8 +46,12 @@ route.post('/', productImgUploader, createProduct);
 route.get('/:product_id?', readProduct);
 // ? admin request
 // route.get('/composition/:product_id', readProductComposition);
+// ? GetEditCategories
+route.get('/editcategory/:id', getEdit)
 // ! UPDATE
 // ? admin/user request
 route.patch('/', productImgUploader, updateProduct);
+// ! DELETE
+route.delete('/delete/:id', deleteProduct),
 
-module.exports = route;
+  module.exports = route;
