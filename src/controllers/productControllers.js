@@ -168,6 +168,37 @@ exports.getCategories = async (req, res) => {
   }
 };
 
+// get each product description
+exports.getDescription = async (req, res) => {
+  const msc = await pool.getConnection()
+  let sql
+  try {
+    sql = `select table1.id, table1.productName, table1.stock, table1.imagePath, table1.description, table2.categoryName, table1.composition from (
+      SELECT 
+        p.id, p.productName, p.productPriceRp, p.stock,
+        p.imagePath, p.description,
+        group_concat(concat(rm.materialName,": ", pcom.amountInUnit, rm.unit) separator ', ') as composition
+      FROM product p
+      join product_composition pcom on p.id = pcom.product_id
+      join raw_material rm on pcom.raw_material_id = rm.id
+      group by p.productName
+    ) table1 join (
+      SELECT 
+        p.id,
+        group_concat(pcat.categoryName separator ", ") as categoryName
+      FROM product p
+      join product_has_category phc on p.id = phc.product_id
+      join product_category pcat on phc.product_category_id = pcat.id
+      group by p.productName
+    ) table2 on table1.id = table2.id`
+    let [result] = await msc.query(sql)
+    msc.release()
+    return res.status(200).send(result)
+  } catch (error) {
+    return res.status(500).send({ message: error.message });
+  }
+}
+
 // get semua produk untuk admin
 exports.AdminGetProducts = async (req, res) => {
   const { search } = req.query
@@ -248,7 +279,7 @@ exports.getProducts = async (req, res) => {
 
     // jika hanya query kategory
     if (parseInt(kategori)) {
-      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
       let [result] = await msc.query(sql, parseInt(kategori))
@@ -316,7 +347,7 @@ exports.getProductsPagination = async (req, res) => {
 
     // jika ada query kategori
     if (parseInt(kategori)) {
-      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
     }

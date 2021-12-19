@@ -10,6 +10,7 @@ const {
   AdminGetProductsPagination,
   // readProductComposition,
   updateProduct,
+  getDescription,
 } = require('../controllers/productControllers');
 const uploader = require('../helpers/uploader');
 // const {} = require('../helpers/verifyJWT');
@@ -22,6 +23,7 @@ const productImgUploader = uploader('/products', 'PROD').fields([
 
 // * zaky
 route.get('/getcategories', getCategories);
+route.get('/getdescription', getDescription)
 // admin
 route.get('/admingetproducts', AdminGetProducts);
 route.get(
