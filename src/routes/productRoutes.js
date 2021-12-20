@@ -10,6 +10,7 @@ const {
   AdminGetProductsPagination,
   // readProductComposition,
   updateProduct,
+  getDescription,
   getEdit,
   deleteProduct
 } = require('../controllers/productControllers');
@@ -24,6 +25,7 @@ const productImgUploader = uploader('/products', 'PROD').fields([
 
 // * zaky
 route.get('/getcategories', getCategories);
+route.get('/getdescription', getDescription)
 // admin
 route.get('/admingetproducts', AdminGetProducts);
 route.get(
@@ -50,6 +52,6 @@ route.get('/editcategory/:id', getEdit)
 // ? admin/user request
 route.patch('/', productImgUploader, updateProduct);
 // ! DELETE
-route.delete('/delete/:id', deleteProduct), 
+route.delete('/delete/:id', deleteProduct),
 
-module.exports = route;
+  module.exports = route;
