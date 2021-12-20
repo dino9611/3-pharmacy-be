@@ -48,7 +48,7 @@ exports.createProduct = async (req, res) => {
     const [result] = await conn.query(sql, insertData);
 
     const productId = result.insertId;
-    const admin_id = 1;
+    const admin_id = 2;
 
     // * create product compositions
     for (let i = 0; i < compositions.length; i++) {
@@ -168,6 +168,69 @@ exports.getCategories = async (req, res) => {
   }
 };
 
+// get each product description
+exports.getDescription = async (req, res) => {
+  const msc = await pool.getConnection()
+  let sql
+  try {
+    sql = `select table1.id, table1.productName, table1.stock, table1.imagePath, table1.description, table2.categoryName, table1.composition from (
+      SELECT 
+        p.id, p.productName, p.productPriceRp, p.stock,
+        p.imagePath, p.description,
+        group_concat(concat(rm.materialName,": ", pcom.amountInUnit, rm.unit) separator ', ') as composition
+      FROM product p
+      join product_composition pcom on p.id = pcom.product_id
+      join raw_material rm on pcom.raw_material_id = rm.id
+      group by p.productName
+    ) table1 join (
+      SELECT 
+        p.id,
+        group_concat(pcat.categoryName separator ", ") as categoryName
+      FROM product p
+      join product_has_category phc on p.id = phc.product_id
+      join product_category pcat on phc.product_category_id = pcat.id
+      group by p.productName
+    ) table2 on table1.id = table2.id`
+    let [result] = await msc.query(sql)
+    msc.release()
+    return res.status(200).send(result)
+  } catch (error) {
+    msc.release()
+    return res.status(500).send({ message: error.message });
+  }
+}
+
+//! GetCategories perproduct untuk edit
+exports.getEdit = async (req, res) => {
+  const conn = await pool.getConnection()
+  const { id } = req.params
+  try {
+    let sql = `SELECT p.id, p.productName, pc.product_category_id, pc.product_id, c.categoryName
+      FROM 3_pharmacy.product p
+      JOIN 3_pharmacy.product_has_category pc
+      ON p.id = pc.product_id
+      JOIN 3_pharmacy.product_category c
+      on pc.product_category_id = c.id
+      where p.id = ?
+      order by p.id ;`
+    let [results] = await conn.query(sql, id)
+    sql = `select pc.product_id ,r.id, r.materialName, r.inventory, pc.amountInUnit 
+      from product_composition pc
+      JOIN raw_material r
+      ON pc.raw_material_id = r.id
+      where product_id = ? ; `
+    let [dataGet] = await conn.query(sql, id)
+    console.log(id)
+    console.log("masuk sini")
+    conn.release()
+    return res.status(200).send([results, dataGet])
+  } catch (error) {
+    conn.release()
+    console.log(error)
+    return res.status(500).send({ message: error.message });
+  }
+}
+
 // get semua produk untuk admin
 exports.AdminGetProducts = async (req, res) => {
   const { search } = req.query
@@ -180,7 +243,7 @@ exports.AdminGetProducts = async (req, res) => {
     if (search) {
       sql += ` where p.productName like '${search}%'`
     }
-    sql += ' group by p.productName order by p.id'
+    sql += ' group by p.productName order by p.updatedAt desc'
     let [result] = await msc.query(sql)
     msc.release()
     return res.status(200).send(result)
@@ -203,7 +266,7 @@ exports.AdminGetProductsPagination = async (req, res) => {
     if (search) {
       sql += ` where p.productName like '${search}%'`
     }
-    sql += ' group by p.productName order by p.id limit ? offset ?'
+    sql += ' group by p.productName order by p.updatedAt desc limit ? offset ?'
     let [result] = await msc.query(sql, [parseInt(rowsPerPage), parseInt(page)])
     msc.release()
     return res.status(200).send(result)
@@ -248,7 +311,7 @@ exports.getProducts = async (req, res) => {
 
     // jika hanya query kategory
     if (parseInt(kategori)) {
-      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
       let [result] = await msc.query(sql, parseInt(kategori))
@@ -316,7 +379,7 @@ exports.getProductsPagination = async (req, res) => {
 
     // jika ada query kategori
     if (parseInt(kategori)) {
-      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`
     }
@@ -350,10 +413,17 @@ exports.getProductsPagination = async (req, res) => {
 
 // ! UPDATE
 exports.updateProduct = async (req, res) => {
+  const { image } = req.files
+  const imagePath = image ? '/products' + `/${image[0].filename}` : null;
+  if (!imagePath) {
+    return res.status(400).send({ message: "No Image Uploaded" })
+  }
   const data = JSON.parse(req.body.data);
   // * req.body.data
-  const { id, stock } = data;
+  const { id, stock, productName, description, categories, compositions, oldCategories } = data;
+  //? untuk setidaknya salah satu dari parameter terisi
 
+  console.log(id)
   // * no raw_material_id
   if (!(id > 0))
     return res.status(400).json({ message: 'invalid request input' });
@@ -361,26 +431,114 @@ exports.updateProduct = async (req, res) => {
   if (!(stock >= 0))
     return res.status(400).json({ message: 'invalid request input' });
 
-  let conn, sql;
+  let conn, sql, updateData;
   try {
     conn = await pool.getConnection();
+    await conn.beginTransaction()
+    // if (!(stock || productName || description || categories || compositions)){
+    //   fs.unlinkSync('./public' + imagePath);
+    //   return res.status(400).send({message: "Data not Changed"})
+    // }
 
-    // ! complex updates
-    const admin_id = 1;
-    // * update stock
+    const imagePath = image ? '/products' + `/${image[0].filename}` : null;
+    if (!imagePath) {
+      return res.status(400).send({ message: "No Image Uploaded" })
+    }
+    const admin_id = 2;
+
+    // agar image dibackend tidak nambah
+    sql = `select * from product where id = ?`
+    let [doesExist] = await conn.query(sql, id)
+    if (imagePath) {
+      if (doesExist[0].imagePath) {
+        fs.unlinkSync("./public" + doesExist[0].imagePath)
+      }
+    }
+
+    // ! straight forward updates
+    updateData = {
+      productName,
+      imagePath,
+      description
+    }
+    sql = 'update product SET ? where id = ? '
+    await conn.query(sql, [updateData, id])
+
+    // const productId = results.insertId
+
+    //? for product compositions
+    for (let i = 0; i < compositions.length; i++) {
+      let el = compositions[i]
+      await conn.query('CALL handle_update_composition(?,?,?,?)', [
+        id,
+        parseFloat(el[0]),
+        parseFloat(el[1]),
+        admin_id
+      ])
+    }
+    console.log(compositions)
+    console.log("composition berhasil")
+    //? for product categories
+    for (let i = 0; i < oldCategories.length; i++) {
+      if (!categories.includes(oldCategories[i])) {
+        // console.log(oldCategories[i], "ini didelete")
+        sql = `delete from product_has_category where product_id = ? and product_category_id = ? `
+        await conn.query(sql, [id, oldCategories[i]])
+      }
+    }
+    for (let i = 0; i < categories.length; i++) {
+      if (!oldCategories.includes(categories[i])) {
+        // console.log(categories[i], "ini di insert")
+        sql = `INSERT INTO product_has_category(product_id, product_category_id) VALUES(?,?)`
+        await conn.query(sql, [id, categories[i]])
+      }
+    }
+
+    //! complex Updates
     let handleStockChange;
     if (stock >= 0) {
       sql = 'CALL handle_update_stock(?, ?, ?);';
       handleStockChange = (await conn.query(sql, [id, stock, admin_id]))[0];
     }
-
-    // ! straight forward updates
-
+    await conn.commit()
     conn.release();
-    res.status(200).json({ handleStockChange });
+    res.status(200).send({ message: "berhasil" });
   } catch (error) {
+    await conn.rollback()
+    if (imagePath) {
+      fs.unlinkSync("./public" + imagePath);
+    }
     conn.release();
-    res.status(500).json({ message: error.message });
+    res.status(500).send({ message: error.message });
     console.log(error);
   }
 };
+
+// ! DELETE PRODUCTS
+exports.deleteProduct = async (req, res) => {
+  const { id } = req.params
+  const conn = await pool.getConnection()
+  const admin_id = 2;
+  try {
+    await conn.beginTransaction()
+    // update isDeleted
+    let dataDelete = {
+      isDeleted: 1
+    }
+    let sql = 'update product SET ? where id = ? ; '
+    await conn.query(sql, [dataDelete, id])
+
+    // update Stock 
+    let handleStock
+    sql = 'CALL handle_update_stock(?, 0, ?);';
+    handleStock = (await conn.query(sql, [id, admin_id]))[0]
+    await conn.commit()
+    conn.release()
+    res.status(200).send({ message: "berhasil" })
+  } catch (error) {
+    await conn.rollback()
+    conn.release()
+    res.status(500).send({ message: error.message })
+    console.log(error)
+  }
+}
