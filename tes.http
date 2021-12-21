@@ -24,3 +24,7 @@ Content-Type: application/json
 ### testUser
 GET http://localhost:2003/profile/32 HTTP/1.1
 Content-Type: application/json
+
+### Test custom
+GET http://localhost:2003/custom HTTP/1.1
+Content-Type: application/json

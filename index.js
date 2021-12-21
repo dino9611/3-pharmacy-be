@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { authRoutes, profileRoutes, transactionRoutes } = require('./src/routes');
+const { authRoutes, profileRoutes, transactionRoutes, prescriptionRoutes } = require('./src/routes');
 const app = express();
 const PORT = process.env.PORT || 2003;
 const cors = require('cors');
@@ -31,6 +31,7 @@ app.use('/raw_material', require('./src/routes/rawMaterialRoutes'));
 app.use('/product', require('./src/routes/productRoutes'));
 app.use('/auth', require('./src/routes/authRoutes'));
 app.use('/transaction', transactionRoutes)
+app.use('/custom', prescriptionRoutes)
 
 app.all('*', (req, res) => {
   res.status(404).json({ message: 'Not Found' });
