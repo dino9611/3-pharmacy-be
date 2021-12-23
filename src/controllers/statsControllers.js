@@ -9,14 +9,14 @@ exports.readRevenue = async (req, res) => {
   try {
     if (req.params.time === 'yearly') {
       sql = `
-      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalRevenueRp, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp + profitRp) AS SIGNED) totalRevenueRp, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
       WHERE status NOT IN ('checkout', 'paymentRej', 'cart')
       GROUP BY year
       ORDER BY checkedOutAt ASC;`;
     } else if (req.params.time === undefined) {
       sql = `
-      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp + profitRp) AS SIGNED) totalRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
       WHERE checkedOutAt BETWEEN ? AND LAST_DAY(?)
       AND status NOT IN ('checkout', 'paymentRej', 'cart')
@@ -39,13 +39,13 @@ exports.readPotentialRevenue = async (req, res) => {
   try {
     if (req.params.time === 'yearly') {
       sql = `
-      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalPotentialRevenueRp, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp + profitRp) AS SIGNED) totalPotentialRevenueRp, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
       GROUP BY year
       ORDER BY checkedOutAt ASC;`;
     } else if (req.params.time === undefined) {
       sql = `
-      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalPotentialRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp + profitRp) AS SIGNED) totalPotentialRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
       WHERE checkedOutAt BETWEEN ? AND LAST_DAY(?)
       GROUP BY month, year
@@ -99,6 +99,29 @@ exports.readCartedItem = async (req, res) => {
     JOIN cart_item ON id = order_id
     WHERE status = 'cart'
     GROUP BY isDeleted;`;
+    const [result] = await pool.query(sql);
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'server error' });
+  }
+};
+
+exports.readSalesSuccessRate = async (req, res) => {
+  let sql;
+  try {
+    // SELECT CAST(SUM(totalPriceRp + profitRp) AS SIGNED) successRate, status, DATE(checkedOutAt) date
+    // FROM 3_pharmacy.order
+    // WHERE status NOT IN ('cart', 'checkout')
+    // GROUP BY status IN ('paymentRej'), DATE(checkedOutAt)
+    // ORDER BY checkedOutAt ASC;
+    sql = `
+    SELECT COUNT(id) count, status, DATE(checkedOutAt) date
+    FROM 3_pharmacy.order
+    WHERE status NOT IN ('cart', 'checkout')
+    GROUP BY status IN ('paymentRej'), DATE(checkedOutAt)
+    ORDER BY checkedOutAt ASC;`;
     const [result] = await pool.query(sql);
 
     res.status(200).json(result);

@@ -3,6 +3,7 @@ const {
   readRevenue,
   readPotentialRevenue,
   readCartedItem,
+  readSalesSuccessRate,
 } = require('../controllers/statsControllers');
 const { verifyAccessToken } = require('../helpers/verifyToken');
 const { verifyAdmin } = require('../middlewares/verifyAdmin');
@@ -16,5 +17,6 @@ route.use(verifyAdmin);
 route.get('/revenue/:time?', readRevenue);
 route.get('/potential_revenue/:time?', readPotentialRevenue);
 route.get('/carted_item', readCartedItem);
+route.get('/sales_success_rate', readSalesSuccessRate);
 
 module.exports = route;
