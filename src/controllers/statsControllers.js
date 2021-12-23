@@ -7,20 +7,19 @@ exports.readRevenue = async (req, res) => {
 
   let sql, parameters;
   try {
-    console.log(req.params.time);
     if (req.params.time === 'yearly') {
       sql = `
-      SELECT CAST(SUM(totalPrice) AS SIGNED) totalRevenueRp, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalRevenueRp, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
-      WHERE !(status = 'checkout' OR status = 'paymentRej' OR status IS NULL)
+      WHERE status NOT IN ('checkout', 'paymentRej', 'cart')
       GROUP BY year
       ORDER BY checkedOutAt ASC;`;
     } else if (req.params.time === undefined) {
       sql = `
-      SELECT CAST(SUM(totalPrice) AS SIGNED) totalRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
       WHERE checkedOutAt BETWEEN ? AND LAST_DAY(?)
-      AND !(status = 'checkout' OR status = 'paymentRej' OR status IS NULL)
+      AND status NOT IN ('checkout', 'paymentRej', 'cart')
       GROUP BY month, year
       ORDER BY checkedOutAt ASC;`;
       parameters = [yearMonthStart, yearMonthEnd];
@@ -40,13 +39,13 @@ exports.readPotentialRevenue = async (req, res) => {
   try {
     if (req.params.time === 'yearly') {
       sql = `
-      SELECT CAST(SUM(totalPrice) AS SIGNED) totalPotentialRevenueRp, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalPotentialRevenueRp, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
       GROUP BY year
       ORDER BY checkedOutAt ASC;`;
     } else if (req.params.time === undefined) {
       sql = `
-      SELECT CAST(SUM(totalPrice) AS SIGNED) totalPotentialRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
+      SELECT CAST(SUM(totalPriceRp) AS SIGNED) totalPotentialRevenueRp, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
       FROM 3_pharmacy.order
       WHERE checkedOutAt BETWEEN ? AND LAST_DAY(?)
       GROUP BY month, year
@@ -63,25 +62,44 @@ exports.readPotentialRevenue = async (req, res) => {
 
 // ? sales report
 exports.readOrders = async (req, res) => {
-  let { status } = req.body;
+  let { status } = req.query;
+  console.log(req.query.status.split(','));
 
   let sql, parameters;
   try {
+    // sql = `
+    // SELECT *
+    // FROM 3_pharmacy.order
+    // WHERE status IN (?);`;
+    // const allStatus = [
+    //   'checkout',
+    //   'paymentAcc',
+    //   'paymentRej',
+    //   'processing',
+    //   'otw',
+    //   'delivered',
+    // ];
+    // parameters = status.filter((el) => allStatus.includes(el));
+    // const [result] = await pool.query(sql, parameters);
+
+    // res.status(200).json(result);
+    res.status(200).json(status);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'server error' });
+  }
+};
+
+exports.readCartedItem = async (req, res) => {
+  let sql;
+  try {
     sql = `
-    SELECT *
+    SELECT SUM(qty) qtySum, isDeleted 
     FROM 3_pharmacy.order
-    WHERE status IN (?);`;
-    const allStatus = [
-      'checkout',
-      'paymentAcc',
-      'paymentRej',
-      'processing',
-      'otw',
-      'delivered',
-    ];
-    status = status.filter((el) => allStatus.includes(el));
-    parameters = status;
-    const [result] = await pool.query(sql, parameters);
+    JOIN cart_item ON id = order_id
+    WHERE status = 'cart'
+    GROUP BY isDeleted;`;
+    const [result] = await pool.query(sql);
 
     res.status(200).json(result);
   } catch (error) {

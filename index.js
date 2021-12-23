@@ -40,4 +40,4 @@ app.all('*', (req, res) => {
   res.status(404).json({ message: 'Not Found' });
 });
 
-app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`running on port ${PORT}`));
