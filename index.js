@@ -27,7 +27,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // ! routes
-app.use('/', require('./src/routes/rootRoutes'));
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
 app.use('/raw_material', require('./src/routes/rawMaterialRoutes'));
@@ -41,4 +40,4 @@ app.all('*', (req, res) => {
   res.status(404).json({ message: 'Not Found' });
 });
 
-app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`running on port ${PORT}`));
