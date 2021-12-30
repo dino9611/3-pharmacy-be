@@ -144,8 +144,9 @@ exports.getCategories = async (req, res) => {
 
 // get each product description
 exports.getDescription = async (req, res) => {
-  const msc = await pool.getConnection();
-  let sql;
+  const { product_id } = req.params
+  const msc = await pool.getConnection()
+  let sql
   try {
     sql = `select table1.id, table1.productName, table1.stock, table1.imagePath, table1.description, table2.categoryName, table1.composition from (
       SELECT 
@@ -164,10 +165,11 @@ exports.getDescription = async (req, res) => {
       join product_has_category phc on p.id = phc.product_id
       join product_category pcat on phc.product_category_id = pcat.id
       group by p.productName
-    ) table2 on table1.id = table2.id`;
-    let [result] = await msc.query(sql);
-    msc.release();
-    return res.status(200).send(result);
+    ) table2 on table1.id = table2.id
+    where table1.id = ?`
+    let [result] = await msc.query(sql, product_id)
+    msc.release()
+    return res.status(200).send(result)
   } catch (error) {
     msc.release();
     return res.status(500).send({ message: error.message });

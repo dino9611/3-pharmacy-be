@@ -7,5 +7,5 @@ GET http://localhost:2003/product/getcategories HTTP/1.1
 Content-Type: application/json
 
 ###
-GET http://localhost:2003/product/getdescription HTTP/1.1
+GET http://localhost:2003/transaction/historydetails/18 HTTP/1.1
 Content-Type: application/json
