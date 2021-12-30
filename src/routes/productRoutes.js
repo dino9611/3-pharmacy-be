@@ -2,26 +2,24 @@ const express = require('express');
 const {
   createProduct,
   readProduct,
-  // readProductCategories,
   getProducts,
   getProductsPagination,
   getCategories,
   AdminGetProducts,
   AdminGetProductsPagination,
-  // readProductComposition,
   updateProduct,
   getDescription,
   getEdit,
-  deleteProduct
+  deleteProduct,
 } = require('../controllers/productControllers');
 const uploader = require('../helpers/uploader');
-// const {} = require('../helpers/verifyJWT');
+const { verifyAccessToken } = require('../helpers/verifyToken');
+const { verifyAdmin } = require('../middlewares/verifyAdmin');
 
 const route = express.Router();
 const productImgUploader = uploader('/products', 'PROD').fields([
   { name: 'image', maxCount: 3 },
 ]);
-
 
 // * zaky
 route.get('/getcategories', getCategories);
@@ -36,22 +34,24 @@ route.get(
 route.get('/getproducts/', getProducts);
 route.get('/gethomepagination/:page', getProductsPagination);
 
-// ! CREATE
 // ? admin request
+route.use(verifyAccessToken);
+route.use(verifyAdmin);
+
+// ! CREATE
 route.post('/', productImgUploader, createProduct);
 // ! READ
-// ? admin request
-// route.get('/category', readProductCategories);
-// ? admin request
+route.get('/admingetproducts', AdminGetProducts);
+route.get(
+  '/getproductspagination/:rowsPerPage/:page',
+  AdminGetProductsPagination
+);
 route.get('/:product_id?', readProduct);
-// ? admin request
-// route.get('/composition/:product_id', readProductComposition);
 // ? GetEditCategories
-route.get('/editcategory/:id', getEdit)
+route.get('/editcategory/:id', getEdit);
 // ! UPDATE
-// ? admin/user request
 route.patch('/', productImgUploader, updateProduct);
 // ! DELETE
-route.delete('/delete/:id', deleteProduct),
+route.delete('/delete/:id', deleteProduct);
 
-  module.exports = route;
+module.exports = route;
