@@ -2,4 +2,5 @@ node_modules/
 public/products/*
 .env
 public/avatar/*
+public/payment/*
 Empass.js
