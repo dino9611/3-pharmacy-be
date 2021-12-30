@@ -8,8 +8,8 @@ module.exports = {
         const pool = await mysql.getConnection()
         try {
             // cari order_id berdasarkan user_id
-            let sql = `select * from 3_pharmacy.order where user_id = ? and status is null`
-            let [order_null] = await pool.query(sql, user_id)
+            let sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`
+            let [order_null] = await pool.query(sql, [user_id, 'cart'])
 
             // jika tidak ditemukan, artinya order sudah mempunyai status. buat row order baru
             if (!order_null.length) {
@@ -21,8 +21,8 @@ module.exports = {
             }
 
             // cari order_id berdasarkan user_id
-            sql = `select * from 3_pharmacy.order where user_id = ? and status is null`
-            let [order] = await pool.query(sql, user_id)
+            sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`
+            let [order] = await pool.query(sql, [user_id, 'cart'])
 
             // cek apakah ada product_id yang sama dalam satu order_id
             sql = `select * from cart_item where order_id = ? and product_id = ?`
@@ -72,7 +72,7 @@ module.exports = {
                 // utk mendapatkan harga setiap produk yg nantinya akan ditotal tiap produk
                 sql = `SELECT * FROM 3_pharmacy.order
                 join cart_item ci on 3_pharmacy.order.id = ci.order_id
-                where 3_pharmacy.order.id = ? and ci.isDeleted = ? and status is null`
+                where 3_pharmacy.order.id = ? and ci.isDeleted = ?`
                 let [prices] = await pool.query(sql, [order[0].id, 0])
                 let totalCounter = 0
                 prices.forEach(val => {
@@ -80,7 +80,7 @@ module.exports = {
                 })
 
                 // update totalPrice yg ada di tabel order dengan hasil dari hitung total
-                sql = `update 3_pharmacy.order set ? where id = ? and status is null`
+                sql = `update 3_pharmacy.order set ? where id = ?`
                 const updateTotal = { totalPrice: totalCounter }
                 await pool.query(sql, [updateTotal, order[0].id])
 
@@ -88,8 +88,8 @@ module.exports = {
                 sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
                 join cart_item ci on 3_pharmacy.order.id = ci.order_id
                 join product p on ci.product_id = p.id
-                where user_id = ? and ci.isDeleted = ? and status is null order by ci.createdAt desc`
-                let [result] = await pool.query(sql, [user_id, 0])
+                where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`
+                let [result] = await pool.query(sql, [user_id, 0, 'cart'])
                 pool.release()
                 return res.status(200).send(result)
             }
@@ -122,8 +122,8 @@ module.exports = {
             sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
-            where user_id = ? and ci.isDeleted = ? and status is null order by ci.createdAt desc`
-            let [result] = await pool.query(sql, [user_id, 0])
+            where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`
+            let [result] = await pool.query(sql, [user_id, 0, 'cart'])
             pool.release()
             return res.status(200).send(result)
         } catch (error) {
@@ -136,8 +136,8 @@ module.exports = {
         const pool = await mysql.getConnection()
         try {
             // cari order_id berdasarkan user_id
-            let sql = `select * from 3_pharmacy.order where user_id = ? and status is null`
-            let [order] = await pool.query(sql, user_id)
+            let sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`
+            let [order] = await pool.query(sql, [user_id, 'cart'])
 
             // cek apakah product yang ingin dihapus ada
             sql = `select * from cart_item where order_id = ? and product_id = ?`
@@ -175,8 +175,8 @@ module.exports = {
             sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
-            where user_id = ? and ci.isDeleted = ? and status is null order by ci.createdAt desc`
-            let [result] = await pool.query(sql, [user_id, 0])
+            where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`
+            let [result] = await pool.query(sql, [user_id, 0, 'cart'])
             pool.release()
             return res.status(200).send(result)
         } catch (error) {
@@ -191,8 +191,8 @@ module.exports = {
             let sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
-            where user_id = ? and ci.isDeleted = ? and status is null order by ci.createdAt desc`
-            let [result] = await pool.query(sql, [user_id, 0])
+            where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`
+            let [result] = await pool.query(sql, [user_id, 0, 'cart'])
             pool.release()
             return res.status(200).send(result)
         } catch (error) {
@@ -206,8 +206,8 @@ module.exports = {
         const pool = await mysql.getConnection()
         try {
             // cari order_id berdasarkan user_id
-            let sql = `select * from 3_pharmacy.order where user_id = ? and status is null`
-            let [order] = await pool.query(sql, user_id)
+            let sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`
+            let [order] = await pool.query(sql, [user_id, 'cart'])
 
             // cek apakah product yang ingin diedit ada
             sql = `select * from cart_item where order_id = ? and product_id = ?`
@@ -259,8 +259,8 @@ module.exports = {
             sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
-            where user_id = ? and ci.isDeleted = ? and status is null order by ci.createdAt desc`
-            let [result] = await pool.query(sql, [user_id, 0])
+            where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`
+            let [result] = await pool.query(sql, [user_id, 0, 'cart'])
             pool.release()
             return res.status(200).send(result)
         } catch (error) {
@@ -270,16 +270,16 @@ module.exports = {
     },
     checkout: async (req, res) => {
         const { user_id } = req.params
-        const { checkedOutAt, address, bank, ongkir } = req.body
+        const { checkedOutAt, address, bank_id, shippingCost } = req.body
         const pool = await mysql.getConnection()
         try {
             // dapatkan informasi order berdasarkan user_id
-            let sql = `select * from 3_pharmacy.order where user_id = ? and status is null`
-            let [order_null] = await pool.query(sql, user_id)
+            let sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`
+            let [order_null] = await pool.query(sql, [user_id, 'cart'])
 
             // dapatkan informasi order berdasarkan user_id
-            sql = `select * from 3_pharmacy.order where id = ? and status is null`
-            let [order] = await pool.query(sql, order_null[0].id)
+            sql = `select * from 3_pharmacy.order where id = ? and status = ?`
+            let [order] = await pool.query(sql, [order_null[0].id, 'cart'])
 
             // jika tidak ada, throw error
             if (!order.length) {
@@ -299,8 +299,8 @@ module.exports = {
                 checkedOutAt,
                 address,
                 status: "checkout",
-                bank,
-                ongkir
+                bank_id,
+                shippingCost
             }
             await pool.query(sql, [dataUpdate, order[0].id])
 
@@ -308,8 +308,27 @@ module.exports = {
             sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
-            where user_id = ? and ci.isDeleted = ? and status is null order by ci.createdAt desc`
-            let [result] = await pool.query(sql, [user_id, 0])
+            where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`
+            let [result] = await pool.query(sql, [user_id, 0, 'cart'])
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    getCheckout: async (req, res) => {
+        const { order_id } = req.params
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `SELECT 
+            3_pharmacy.order.id, 3_pharmacy.order.totalPrice, 3_pharmacy.order.address,
+            3_pharmacy.order.paymentProof, 3_pharmacy.order.status, 3_pharmacy.order.shippingCost,
+            b.bank, b.accountNumber, 3_pharmacy.order.user_id
+            FROM 3_pharmacy.order
+            join bank b on 3_pharmacy.order.bank_id = b.id
+            where 3_pharmacy.order.id = ?`
+            let [result] = await pool.query(sql, order_id)
             pool.release()
             return res.status(200).send(result)
         } catch (error) {
@@ -318,7 +337,7 @@ module.exports = {
         }
     },
     paymentProof: async (req, res) => {
-        const { user_id } = req.params
+        const { order_id, prescription_id } = req.params
         const { product, prescription } = req.files
         const pool = await mysql.getConnection()
         let path = '/payment'
@@ -327,25 +346,22 @@ module.exports = {
         if (product) {
             let imagePath = product ? `${path}/${product[0].filename}` : null
             try {
-                let sql = `select * from 3_pharmacy.order where user_id = ? and status is null`
-                let [order_null] = await pool.query(sql, user_id)
-
-                sql = `select * from 3_pharmacy.order where id = ?`
-                let [order] = await pool.query(sql, order_null[0].id)
+                let sql = `select * from 3_pharmacy.order where id = ?`
+                let [order] = await pool.query(sql, order_id)
 
                 if (!order.length) {
                     pool.release()
                     throw { message: "row is not found" }
                 }
                 sql = `update 3_pharmacy.order set ? where id = ?`
-                let dataPayment = {}
+                let dataPayment = { status: "checkout" }
                 if (imagePath) {
                     if (order[0].paymentProof) {
                         fs.unlinkSync("./public" + order[0].paymentProof)
                     }
                     dataPayment.paymentProof = imagePath
                 }
-                await pool.query(sql, [dataPayment, order[0].id])
+                await pool.query(sql, [dataPayment, order_id])
                 pool.release()
                 return res.status(200).send({ message: "upload product proof success" })
             } catch (error) {
@@ -361,11 +377,8 @@ module.exports = {
         if (prescription) {
             let imagePath = prescription ? `${path}/${prescription[0].filename}` : null
             try {
-                let sql = `select * from prescription where user_id = ?`
-                let [resep_null] = await pool.query(sql, user_id)
-
-                sql = `select * from prescription where id = ?`
-                let [resep] = await pool.query(sql, resep_null[0].id)
+                let sql = `select * from prescription where id = ?`
+                let [resep] = await pool.query(sql, prescription_id)
 
                 if (!resep.length) {
                     pool.release()
@@ -391,18 +404,102 @@ module.exports = {
             }
         }
     },
-    transactionRequest: async (req, res) => {
+    adminGetOrder: async (req, res) => {
+        const { filter } = req.query
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `select 
+                order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
+                order.status, order.shippingCost, order.bank_id, u.username
+            from 3_pharmacy.order
+            join user u on order.user_id = u.id`
+            if (!filter) {
+                sql += ` where status <> 'cart'`
+            }
+            if (filter === 'waitingpayment') {
+                sql += ` where status = 'checkout' and paymentProof is null`
+            }
+            if (filter === 'checkout') {
+                sql += ` where status = ? and paymentProof is not null`
+            }
+            if (filter === 'processing') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'otw') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'delivered') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'paymentAcc') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'paymentRej') {
+                sql += ` where status = ?`
+            }
+            sql += ` order by checkedOutAt desc`
+            if (filter) {
+                let [result] = await pool.query(sql, filter)
+                pool.release()
+                return res.status(200).send(result)
+            }
+            let [result] = await pool.query(sql)
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    getOrder: async (req, res) => {
         const { user_id } = req.params
+        const { filter } = req.query
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `select * from 3_pharmacy.order where user_id = ?`
+            if (!filter) {
+                sql += ` and status <> 'cart'`
+            }
+            if (filter === 'waitingpayment') {
+                sql += ` and status = 'checkout' and paymentProof is null`
+            }
+            if (filter === 'checkout') {
+                sql += ` and status = ? and paymentProof is not null`
+            }
+            if (filter === 'processing') {
+                sql += ` and status = ?`
+            }
+            if (filter === 'otw') {
+                sql += ` and status = ?`
+            }
+            if (filter === 'delivered') {
+                sql += ` and status = ?`
+            }
+            if (filter === 'paymentRej') {
+                sql += ` and status = ?`
+            }
+            sql += ` order by checkedOutAt desc`
+            if (filter) {
+                let [result] = await pool.query(sql, [user_id, filter])
+                pool.release()
+                return res.status(200).send(result)
+            }
+            let [result] = await pool.query(sql, user_id)
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    transactionRequest: async (req, res) => {
+        const { order_id } = req.params
         const { type } = req.body
         const pool = await mysql.getConnection()
         try {
-            // cari row di tabel order berdasarkan user_id
-            let sql = `select * from 3_pharmacy.order where user_id = ?`
-            let [order_null] = await pool.query(sql, user_id)
-
             // cari row di tabel order berdasarkan id
             sql = `select * from 3_pharmacy.order where id = ?`
-            let [order] = await pool.query(sql, order_null[0].id)
+            let [order] = await pool.query(sql, order_id)
 
             // throw error jika tidak ada, skip jika ada
             if (!order.length) {
@@ -421,11 +518,11 @@ module.exports = {
                 // update status berdasarkan id
                 sql = `update 3_pharmacy.order set ? where id = ?`
                 const dataUpdate = { status: 'paymentAcc' }
-                await pool.query(sql, [dataUpdate, order[0].id])
+                await pool.query(sql, [dataUpdate, order_id])
 
                 // dapatkan cart_item berdasarkan order_id
                 sql = `select * from cart_item where order_id = ? and isDeleted = ?`
-                let [cart] = await pool.query(sql, [order[0].id, 0])
+                let [cart] = await pool.query(sql, [order_id, 0])
 
                 // ambil product_id dan qty untuk proses mengurangi stok
                 // saat transaksi diterima
@@ -442,12 +539,13 @@ module.exports = {
                     await pool.query(sql, [dataUpdate, val.id])
                 })
 
-                // hapus keranjang berdasarkan order_id
-                sql = `delete from cart_item where order_id = ?`
-                await pool.query(sql, order[0].id)
-
                 // get semua data order
-                sql = `select * from 3_pharmacy.order`
+                sql = `select 
+                order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
+                order.status, order.shippingCost, order.bank_id, u.username
+                from 3_pharmacy.order
+                join user u on order.user_id = u.id
+                order by checkedOutAt desc`
                 let [result] = await pool.query(sql)
                 pool.release()
                 return res.status(200).send(result)
@@ -455,17 +553,98 @@ module.exports = {
 
             // kode jika type-nya reject
             if (type === "reject") {
-                // update status berdasarkan user_id
-                sql = `update 3_pharmacy.order set ? where user_id = ?`
+                // update status berdasarkan order_id
+                sql = `update 3_pharmacy.order set ? where id = ?`
                 const dataUpdate = { status: 'paymentRej' }
-                await pool.query(sql, [dataUpdate, user_id])
+                await pool.query(sql, [dataUpdate, order_id])
 
                 // get semua data order
-                sql = `select * from 3_pharmacy.order`
+                sql = `select 
+                order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
+                order.status, order.shippingCost, order.bank_id, u.username
+                from 3_pharmacy.order
+                join user u on order.user_id = u.id
+                order by checkedOutAt desc`
                 let [result] = await pool.query(sql)
                 pool.release()
                 return res.status(200).send(result)
             }
+
+            // jika type-nya processing
+            if (type === 'process') {
+                // update status berdasarkan order_id
+                sql = `update 3_pharmacy.order set ? where id = ?`
+                const dataUpdate = { status: 'processing' }
+                await pool.query(sql, [dataUpdate, order_id])
+
+                // get semua data order
+                sql = `select 
+                order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
+                order.status, order.shippingCost, order.bank_id, u.username
+                from 3_pharmacy.order
+                join user u on order.user_id = u.id
+                order by checkedOutAt desc`
+                let [result] = await pool.query(sql)
+                pool.release()
+                return res.status(200).send(result)
+            }
+
+            // jika type-nya otw
+            if (type === 'deliver') {
+                // update status berdasarkan order_id
+                sql = `update 3_pharmacy.order set ? where id = ?`
+                const dataUpdate = { status: 'otw' }
+                await pool.query(sql, [dataUpdate, order_id])
+
+                // get semua data order
+                sql = `select 
+                order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
+                order.status, order.shippingCost, order.bank_id, u.username
+                from 3_pharmacy.order
+                join user u on order.user_id = u.id
+                order by checkedOutAt desc`
+                let [result] = await pool.query(sql)
+                pool.release()
+                return res.status(200).send(result)
+            }
+
+            // jika type-nya otw
+            if (type === 'delivered') {
+                // update status berdasarkan order_id
+                sql = `update 3_pharmacy.order set ? where id = ?`
+                const dataUpdate = { status: 'delivered' }
+                await pool.query(sql, [dataUpdate, order_id])
+
+                // get semua data order
+                sql = `select 
+                order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
+                order.status, order.shippingCost, order.bank_id, u.username
+                from 3_pharmacy.order
+                join user u on order.user_id = u.id
+                order by checkedOutAt desc`
+                let [result] = await pool.query(sql)
+                pool.release()
+                return res.status(200).send(result)
+            }
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    historyDetails: async (req, res) => {
+        const { order_id } = req.params
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `select 
+            o.id, o.totalPrice, o.checkedOutAt, o.address, o.paymentProof,
+            o.status, o.shippingCost, b.bank, u.username
+            from 3_pharmacy.order o
+            join bank b on o.bank_id = b.id
+            join user u on o.user_id = u.id
+            where o.id = ?`
+            let [result] = await pool.query(sql, order_id)
+            pool.release()
+            return res.status(200).send(result)
         } catch (error) {
             pool.release()
             return res.status(500).send({ message: error.message })

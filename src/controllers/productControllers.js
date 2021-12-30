@@ -170,6 +170,7 @@ exports.getCategories = async (req, res) => {
 
 // get each product description
 exports.getDescription = async (req, res) => {
+  const { product_id } = req.params
   const msc = await pool.getConnection()
   let sql
   try {
@@ -190,8 +191,9 @@ exports.getDescription = async (req, res) => {
       join product_has_category phc on p.id = phc.product_id
       join product_category pcat on phc.product_category_id = pcat.id
       group by p.productName
-    ) table2 on table1.id = table2.id`
-    let [result] = await msc.query(sql)
+    ) table2 on table1.id = table2.id
+    where table1.id = ?`
+    let [result] = await msc.query(sql, product_id)
     msc.release()
     return res.status(200).send(result)
   } catch (error) {
