@@ -101,4 +101,27 @@ exports.readRevenue = async (req, res) => {
   }
 };
 
-// ? sales report
+// ? new users increase
+exports.readNewUsers = async (req, res) => {
+  let prev, curr;
+  try {
+    prev = `
+    SELECT COUNT(id) count
+    FROM 3_pharmacy.user
+    WHERE createdAt BETWEEN (NOW() - INTERVAL 2 DAY) AND (NOW() - INTERVAL 1 DAY);`;
+    curr = `
+    SELECT COUNT(id) count
+    FROM 3_pharmacy.user
+    WHERE createdAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()`;
+    const [prevResult] = await pool.query(prev);
+    const [currResult] = await pool.query(curr);
+
+    const result =
+      (currResult[0].count - prevResult[0].count) / prevResult[0].count;
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'server error' });
+  }
+};

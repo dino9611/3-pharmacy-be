@@ -1,5 +1,8 @@
 const express = require('express');
-const { readRevenue } = require('../controllers/statsControllers');
+const {
+  readRevenue,
+  readNewUsers,
+} = require('../controllers/statsControllers');
 const { verifyAccessToken } = require('../helpers/verifyToken');
 const { verifyAdmin } = require('../middlewares/verifyAdmin');
 
@@ -10,5 +13,6 @@ route.use(verifyAdmin);
 
 // ? admin request
 route.get('/revenue', readRevenue);
+route.get('/new_users', readNewUsers);
 
 module.exports = route;
