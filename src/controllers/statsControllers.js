@@ -101,8 +101,31 @@ exports.readRevenue = async (req, res) => {
   }
 };
 
+// ? read sales by product category
+exports.readSalesByCategory = async (req, res) => {
+  let { yearMonthStart, yearMonthEnd } = req.query;
+  let sql;
+  try {
+    sql = `
+    SELECT SUM(totalPriceRp) cost, SUM(profitRp) profit, categoryName
+    FROM 3_pharmacy.order A
+    JOIN cart_item B ON A.id = B.order_id
+    JOIN product C ON B.product_id = C.id
+    JOIN product_has_category D ON C.id = D.product_id
+    JOIN product_category E ON D.product_category_id = E.id
+    WHERE status IN('paymentAcc', 'processing', 'otw', 'delivered')
+    AND checkedOutAt BETWEEN ? AND LAST_DAY(?)
+    GROUP BY categoryName;`;
+    const [result] = await pool.query(sql, [yearMonthStart, yearMonthEnd]);
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'server error' });
+  }
+};
+
 // ? new users increase
-exports.readNewUsers = async (req, res) => {
+exports.readRecentNewUsers = async (req, res) => {
   let prev, curr;
   try {
     prev = `
@@ -112,6 +135,31 @@ exports.readNewUsers = async (req, res) => {
     curr = `
     SELECT COUNT(id) count
     FROM 3_pharmacy.user
+    WHERE createdAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()`;
+    const [prevResult] = await pool.query(prev);
+    const [currResult] = await pool.query(curr);
+
+    const result =
+      (currResult[0].count - prevResult[0].count) / prevResult[0].count;
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'server error' });
+  }
+};
+
+// ? recent carted items increase
+exports.readRecentCartedItems = async (req, res) => {
+  let prev, curr;
+  try {
+    prev = `
+    SELECT COUNT(*) count
+    FROM cart_item
+    WHERE createdAt BETWEEN (NOW() - INTERVAL 2 DAY) AND (NOW() - INTERVAL 1 DAY);`;
+    curr = `
+    SELECT COUNT(*) count
+    FROM cart_item
     WHERE createdAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()`;
     const [prevResult] = await pool.query(prev);
     const [currResult] = await pool.query(curr);
