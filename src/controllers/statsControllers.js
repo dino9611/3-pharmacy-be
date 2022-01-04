@@ -17,7 +17,7 @@ exports.readRevenue = async (req, res) => {
         let prev = `
         SELECT CAST(SUM(cost + profit) AS SIGNED) revenue FROM
         (
-        SELECT SUM(totalPriceRp) cost, SUM(profitRp) profit
+        SELECT SUM(totalPrice) cost, SUM(profitRp) profit
         FROM 3_pharmacy.order
         WHERE checkedOutAt BETWEEN (NOW() - INTERVAL 2 DAY) AND (NOW() - INTERVAL 1 DAY)
         ${potentialRevenueCondition}
@@ -31,7 +31,7 @@ exports.readRevenue = async (req, res) => {
         let curr = `
         SELECT CAST(SUM(cost + profit) AS SIGNED) revenue FROM
         (
-        SELECT SUM(totalPriceRp) cost, SUM(profitRp) profit
+        SELECT SUM(totalPrice) cost, SUM(profitRp) profit
         FROM 3_pharmacy.order
         WHERE checkedOutAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()
         ${potentialRevenueCondition}
@@ -54,7 +54,7 @@ exports.readRevenue = async (req, res) => {
         sql = `
         SELECT SUM(cost) cost, SUM(profit) profit, month, year FROM
         (
-        SELECT SUM(totalPriceRp) cost, SUM(profitRp) profit, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
+        SELECT SUM(totalPrice) cost, SUM(profitRp) profit, MONTH(checkedOutAt) month, YEAR(checkedOutAt) year
         FROM 3_pharmacy.order
         WHERE checkedOutAt BETWEEN ? AND LAST_DAY(?)
         ${potentialRevenueCondition}
@@ -80,7 +80,7 @@ exports.readRevenue = async (req, res) => {
         return res.status(200).json(result);
       case 'yearly':
         sql = `
-        SELECT CAST(SUM(totalPriceRp + profitRp) AS SIGNED) totalRevenueRp, YEAR(checkedOutAt) year
+        SELECT CAST(SUM(totalPrice + profitRp) AS SIGNED) totalRevenueRp, YEAR(checkedOutAt) year
         FROM 3_pharmacy.order
         WHERE TRUE
         ${potentialRevenueCondition}
@@ -107,7 +107,7 @@ exports.readSalesByCategory = async (req, res) => {
   let sql;
   try {
     sql = `
-    SELECT SUM(totalPriceRp) cost, SUM(profitRp) profit, categoryName
+    SELECT SUM(totalPrice) cost, SUM(profitRp) profit, categoryName
     FROM 3_pharmacy.order A
     JOIN cart_item B ON A.id = B.order_id
     JOIN product C ON B.product_id = C.id
