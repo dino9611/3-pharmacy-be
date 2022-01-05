@@ -213,13 +213,10 @@ exports.AdminGetProducts = async (req, res) => {
   const msc = await pool.getConnection();
   let sql;
   try {
-    sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
-    join product_has_category ph on p.id = ph.product_id
-    join product_category pc on ph.product_category_id = pc.id`;
+    sql = `SELECT count(*) as product_length FROM product p`
     if (search) {
       sql += ` where p.productName like '${search}%'`;
     }
-    sql += ' group by p.productName order by p.updatedAt desc';
     let [result] = await msc.query(sql);
     msc.release();
     return res.status(200).send(result);
@@ -261,21 +258,17 @@ exports.getProducts = async (req, res) => {
   const msc = await pool.getConnection();
   let sql;
   try {
-    sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
-    join product_has_category ph on p.id = ph.product_id
-    join product_category pc on ph.product_category_id = pc.id`;
+    sql = `SELECT count(*) as product_length from product`
 
     // jika ada query search maka :
     if (search) {
-      sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
-      join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id group by p.productName`;
+      sql = `select count(*) as product_length from product where productName like '${search}%'`;
       if (parseInt(kategori)) {
-        sql = ` select * from (SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
-          join product_has_category ph on p.id = ph.product_id
-          join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
+        sql = `SELECT count(*) as product_length FROM product p
+        join product_has_category ph on p.id = ph.product_id
+        join product_category pc on ph.product_category_id = pc.id
+        where pc.id = ? and productName like '${search}%'`;
       }
-      sql += `) as sn where sn.productName like '${search}%'`;
 
       // jika ada query search dan kategori maka :
       if (parseInt(kategori)) {
@@ -290,14 +283,13 @@ exports.getProducts = async (req, res) => {
 
     // jika hanya query kategory
     if (parseInt(kategori)) {
-      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `SELECT count(*) as product_length FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
       let [result] = await msc.query(sql, parseInt(kategori));
       msc.release();
       return res.status(200).send(result);
     }
-    sql += ' group by p.productName order by p.id';
     let [result] = await msc.query(sql);
     msc.release();
     return res.status(200).send(result);
@@ -375,7 +367,7 @@ exports.getProductsPagination = async (req, res) => {
       sql += ' order by p.productPriceRp desc';
     }
     if (filter === 'default') {
-      sql += ' order by p.id asc';
+      sql += ' order by p.createdAt desc';
     }
     if (parseInt(kategori)) {
       sql += ' limit ? offset ?';

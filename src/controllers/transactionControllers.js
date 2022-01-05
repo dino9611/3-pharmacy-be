@@ -404,20 +404,29 @@ module.exports = {
             }
         }
     },
-    adminGetOrder: async (req, res) => {
-        const { filter } = req.query
+    adminOrderLength: async (req, res) => {
+        const { range, filter } = req.query
         const pool = await mysql.getConnection()
         try {
-            let sql = `select 
-                order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
-                order.status, order.shippingCost, order.bank_id, u.username
-            from 3_pharmacy.order
+            let sql = `select count(*) as order_length from 3_pharmacy.order
             join user u on order.user_id = u.id`
             if (!filter) {
                 sql += ` where status <> 'cart'`
             }
             if (filter === 'waitingpayment') {
                 sql += ` where status = 'checkout' and paymentProof is null`
+                if (range) {
+                    if (range === 'week') {
+                        sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                    }
+                    if (range === 'month') {
+                        sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                    }
+                }
+                sql += ` order by checkedOutAt desc`
+                let [result] = await pool.query(sql)
+                pool.release()
+                return res.status(200).send(result)
             }
             if (filter === 'checkout') {
                 sql += ` where status = ? and paymentProof is not null`
@@ -437,6 +446,14 @@ module.exports = {
             if (filter === 'paymentRej') {
                 sql += ` where status = ?`
             }
+            if (range) {
+                if (range === 'week') {
+                    sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                }
+                if (range === 'month') {
+                    sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                }
+            }
             sql += ` order by checkedOutAt desc`
             if (filter) {
                 let [result] = await pool.query(sql, filter)
@@ -451,17 +468,96 @@ module.exports = {
             return res.status(500).send({ message: error.message })
         }
     },
-    getOrder: async (req, res) => {
-        const { user_id } = req.params
-        const { filter } = req.query
+    adminGetOrder: async (req, res) => {
+        const { filter, limit, offset, range } = req.query
         const pool = await mysql.getConnection()
         try {
-            let sql = `select * from 3_pharmacy.order where user_id = ?`
+            let sql = `select 
+            order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
+            order.status, order.shippingCost, order.bank_id, u.username
+            from 3_pharmacy.order
+            join user u on order.user_id = u.id`
+            if (!filter) {
+                sql += ` where status <> 'cart'`
+            }
+            if (filter === 'waitingpayment') {
+                sql += ` where status = 'checkout' and paymentProof is null`
+                if (range) {
+                    if (range === 'week') {
+                        sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                    }
+                    if (range === 'month') {
+                        sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                    }
+                }
+                sql += ` order by checkedOutAt desc limit ? offset ?`
+                let [result] = await pool.query(sql, [parseInt(limit), parseInt(offset)])
+                pool.release()
+                return res.status(200).send(result)
+            }
+            if (filter === 'checkout') {
+                sql += ` where status = ? and paymentProof is not null`
+            }
+            if (filter === 'processing') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'otw') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'delivered') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'paymentAcc') {
+                sql += ` where status = ?`
+            }
+            if (filter === 'paymentRej') {
+                sql += ` where status = ?`
+            }
+            if (range) {
+                if (range === 'week') {
+                    sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                }
+                if (range === 'month') {
+                    sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                }
+            }
+            sql += ` order by checkedOutAt desc limit ? offset ?`
+            if (filter) {
+                let [result] = await pool.query(sql, [filter, parseInt(limit), parseInt(offset)])
+                pool.release()
+                return res.status(200).send(result)
+            }
+            let [result] = await pool.query(sql, [parseInt(limit), parseInt(offset)])
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    orderLength: async (req, res) => {
+        const { user_id } = req.params
+        const { range, filter } = req.query
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `select count(*) as order_length from 3_pharmacy.order where user_id = ?`
             if (!filter) {
                 sql += ` and status <> 'cart'`
             }
             if (filter === 'waitingpayment') {
                 sql += ` and status = 'checkout' and paymentProof is null`
+                if (range) {
+                    if (range === 'week') {
+                        sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                    }
+                    if (range === 'month') {
+                        sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                    }
+                }
+                sql += ` order by checkedOutAt desc`
+                let [result] = await pool.query(sql, user_id)
+                pool.release()
+                return res.status(200).send(result)
             }
             if (filter === 'checkout') {
                 sql += ` and status = ? and paymentProof is not null`
@@ -475,8 +571,19 @@ module.exports = {
             if (filter === 'delivered') {
                 sql += ` and status = ?`
             }
+            if (filter === 'paymentAcc') {
+                sql += ` and status = ?`
+            }
             if (filter === 'paymentRej') {
                 sql += ` and status = ?`
+            }
+            if (range) {
+                if (range === 'week') {
+                    sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                }
+                if (range === 'month') {
+                    sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                }
             }
             sql += ` order by checkedOutAt desc`
             if (filter) {
@@ -485,6 +592,89 @@ module.exports = {
                 return res.status(200).send(result)
             }
             let [result] = await pool.query(sql, user_id)
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            console.log(error.message);
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    getOrder: async (req, res) => {
+        const { user_id, offset } = req.params
+        const { range, filter } = req.query
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `select 
+            o.id, o.totalPrice, o.checkedOutAt,
+            o.address, o.paymentProof, o.status, 
+            o.shippingCost, o.bank_id, o.user_id,
+            concat('[',
+                group_concat(
+                    concat(
+                        '{\"id\": \"', p.id, '\",',
+                        '\"productName\": \"', p.productName, '\",',
+                        '\"imagePath\": \"', p.imagePath, '\",',
+                        '\"productPriceRp\": \"', p.productPricerp, '\",',
+                        '\"qty\": \"', ci.qty, '\"}'
+                    )
+                ),
+            ']') AS product_list
+            from 3_pharmacy.order o
+            join cart_item ci on o.id = ci.order_id
+            join product p on ci.product_id = p.id 
+            where o.user_id = ? and ci.isDeleted = 0`
+            if (!filter) {
+                sql += ` and status <> 'cart'`
+            }
+            if (filter === 'waitingpayment') {
+                sql += ` and status = 'checkout' and paymentProof is null`
+                if (range) {
+                    if (range === 'week') {
+                        sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                    }
+                    if (range === 'month') {
+                        sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                    }
+                }
+                sql += ` group by o.id order by checkedOutAt desc limit ? offset ?`
+                let [result] = await pool.query(sql, [user_id, 5, parseInt(offset)])
+                pool.release()
+                return res.status(200).send(result)
+            }
+            if (filter === 'checkout') {
+                sql += ` and status = ? and paymentProof is not null`
+            }
+            if (filter === 'processing') {
+                sql += ` and status = ?`
+            }
+            if (filter === 'otw') {
+                sql += ` and status = ?`
+            }
+            if (filter === 'delivered') {
+                sql += ` and status = ?`
+            }
+            if (filter === 'paymentAcc') {
+                sql += ` and status = ?`
+            }
+            if (filter === 'paymentRej') {
+                sql += ` and status = ?`
+            }
+            if (range) {
+                if (range === 'week') {
+                    sql += ' and checkedOutAt >= (select date_sub(now(), interval 1 week))'
+                }
+                if (range === 'month') {
+                    sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`
+                }
+            }
+            sql += ` group by o.id order by checkedOutAt desc limit ? offset ?`
+            if (filter) {
+                let [result] = await pool.query(sql, [user_id, filter, 5, parseInt(offset)])
+                pool.release()
+                return res.status(200).send(result)
+            }
+            let [result] = await pool.query(sql, [user_id, 5, parseInt(offset)])
             pool.release()
             return res.status(200).send(result)
         } catch (error) {
@@ -642,6 +832,21 @@ module.exports = {
             join bank b on o.bank_id = b.id
             join user u on o.user_id = u.id
             where o.id = ?`
+            let [result] = await pool.query(sql, order_id)
+            pool.release()
+            return res.status(200).send(result)
+        } catch (error) {
+            pool.release()
+            return res.status(500).send({ message: error.message })
+        }
+    },
+    boughtProducts: async (req, res) => {
+        const { order_id } = req.params
+        const pool = await mysql.getConnection()
+        try {
+            let sql = `SELECT * FROM cart_item ci
+            join product p on ci.product_id = p.id
+            where order_id = ? and ci.isDeleted = 0`
             let [result] = await pool.query(sql, order_id)
             pool.release()
             return res.status(200).send(result)
