@@ -23,7 +23,7 @@ const productImgUploader = uploader('/products', 'PROD').fields([
 
 // * zaky
 route.get('/getcategories', getCategories);
-route.get('/getdescription/:product_id', getDescription)
+route.get('/getdescription/:product_id', getDescription);
 // admin
 route.get('/admingetproducts', AdminGetProducts);
 route.get(
