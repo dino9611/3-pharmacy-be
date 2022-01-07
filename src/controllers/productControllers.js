@@ -96,17 +96,26 @@ exports.readProduct = async (req, res) => {
   if (product_id > 0 === (page > 0 && limit > 0))
     return res.status(400).json({ message: 'invalid query' });
 
-  let conn, sql, parameters;
+  let conn, sql, parameters, result;
   try {
     conn = await pool.getConnection();
 
     if (product_id) {
       // * get specific product
-      sql = `
-      SELECT *
-      FROM product
-      WHERE id = ?;`;
       parameters = product_id;
+      sql = `
+      SELECT A.*, GROUP_CONCAT(CONCAT(B.raw_material_id, ';', B.amountInUnit)) compositions
+      FROM product A
+      JOIN product_composition B ON A.id = B.product_id
+      WHERE A.id = ?;`;
+      const [result1] = await conn.query(sql, parameters);
+      sql = `
+      SELECT GROUP_CONCAT(B.product_category_id) categories
+      FROM product A
+      JOIN product_has_category B ON A.id = B.product_id
+      WHERE A.id = ?;`;
+      const [result2] = await conn.query(sql, parameters);
+      result = { ...result1[0], ...result2[0] };
     } else {
       // * product pagination
       sql = `
@@ -116,8 +125,8 @@ exports.readProduct = async (req, res) => {
       limit = parseInt(limit);
       let offset = (parseInt(page) - 1) * limit;
       parameters = [offset, limit];
+      [result] = await conn.query(sql, parameters);
     }
-    const [result] = await conn.query(sql, parameters);
 
     conn.release();
     res.status(200).json({ result });
@@ -132,7 +141,7 @@ exports.readProduct = async (req, res) => {
 exports.getCategories = async (req, res) => {
   let sql;
   try {
-    sql = 'select * from product_category';
+    sql = 'select * from product_category;';
     let [result] = await pool.query(sql);
     return res.status(200).send(result);
   } catch (error) {
@@ -392,9 +401,6 @@ exports.getProductsPagination = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   const { image } = req.files;
   const imagePath = image ? '/products' + `/${image[0].filename}` : null;
-  if (!imagePath) {
-    return res.status(400).send({ message: 'No Image Uploaded' });
-  }
   const data = JSON.parse(req.body.data);
   // * req.body.data
   const {
@@ -408,7 +414,6 @@ exports.updateProduct = async (req, res) => {
   } = data;
   //? untuk setidaknya salah satu dari parameter terisi
 
-  console.log(id);
   // * no raw_material_id
   if (!(id > 0))
     return res.status(400).json({ message: 'invalid request input' });
@@ -425,55 +430,98 @@ exports.updateProduct = async (req, res) => {
     //   return res.status(400).send({message: "Data not Changed"})
     // }
 
-    const imagePath = image ? '/products' + `/${image[0].filename}` : null;
-    if (!imagePath) {
-      return res.status(400).send({ message: 'No Image Uploaded' });
-    }
+    // const imagePath = image ? '/products' + `/${image[0].filename}` : null;
+    // if (!imagePath) {
+    //   return res.status(400).send({ message: 'No Image Uploaded' });
+    // }
     const admin_id = req.user.id;
 
-    // agar image dibackend tidak nambah
-    sql = `select * from product where id = ?`;
-    let [doesExist] = await conn.query(sql, id);
-    if (imagePath) {
-      if (doesExist[0].imagePath) {
-        fs.unlinkSync('./public' + doesExist[0].imagePath);
-      }
+    // * agar image dibackend tidak nambah
+    // sql = `select * from product where id = ?`;
+    // let [doesExist] = await conn.query(sql, id);
+    // if (imagePath) {
+    //   if (doesExist[0].imagePath) {
+    //     if (fs.existsSync('./public' + doesExist[0].imagePath)) {
+    //       fs.unlinkSync('./public' + doesExist[0].imagePath);
+    //     }
+    //   }
+    // }
+    if (
+      imagePath &&
+      data.imagePath &&
+      fs.existsSync('./public' + data.imagePath)
+    ) {
+      fs.unlinkSync('./public' + data.imagePath);
     }
 
     // ! straight forward updates
     updateData = {
       productName,
-      imagePath,
       description,
     };
-    sql = 'update product SET ? where id = ? ';
+    if (imagePath) updateData.imagePath = imagePath;
+    sql = 'UPDATE product SET ? WHERE id = ? ';
     await conn.query(sql, [updateData, id]);
 
     // const productId = results.insertId
+    sql = `
+    SELECT raw_material_id id, amountInUnit
+    FROM product A
+    JOIN product_composition B ON A.id = B.product_id
+    WHERE A.id = ?;`;
+    const [currCompositions] = await conn.query(sql, [id]);
+    let delCompositions = [];
+    let addCompositions = [];
+    currCompositions.forEach((el) => {
+      if (!compositions.some((el2) => el2.id === el.id))
+        delCompositions.push(el);
+    });
+    compositions.forEach((el, i) => {
+      if (!currCompositions.some((el2) => el2.id === el.id)) {
+        addCompositions.push(el);
+        compositions.splice(i, 1);
+      }
+    });
+    // console.log('compositions', compositions);
+    // console.log('delCompositions', delCompositions);
+    // console.log('addCompositions', addCompositions);
 
     //? for product compositions
+    // for (let i = 0; i < delCompositions.length; i++) {
+    //   let el = delCompositions[i];
+    //   await conn.query('CALL handle_delete_composition(?,?,?,?)', [
+    //     id,
+    //     parseFloat(el.id),
+    //     admin_id,
+    //   ]);
+    // }
     for (let i = 0; i < compositions.length; i++) {
       let el = compositions[i];
       await conn.query('CALL handle_update_composition(?,?,?,?)', [
         id,
-        parseFloat(el[0]),
-        parseFloat(el[1]),
+        parseFloat(el.id),
+        parseFloat(el.amountInUnit),
         admin_id,
       ]);
     }
-    console.log(compositions);
-    console.log('composition berhasil');
+
     //? for product categories
-    for (let i = 0; i < oldCategories.length; i++) {
-      if (!categories.includes(oldCategories[i])) {
-        // console.log(oldCategories[i], "ini didelete")
-        sql = `delete from product_has_category where product_id = ? and product_category_id = ? `;
-        await conn.query(sql, [id, oldCategories[i]]);
+    sql = `
+    SELECT GROUP_CONCAT(product_category_id) category_id
+    FROM product A
+    JOIN product_has_category B ON A.id = B.product_id
+    WHERE A.id = ?;`;
+    let [currCategories] = await conn.query(sql, [id]);
+    currCategories = currCategories[0].category_id.split(',');
+
+    for (let i = 0; i < currCategories.length; i++) {
+      if (!categories.includes(currCategories[i])) {
+        sql = `DELETE FROM product_has_category WHERE product_id = ? AND product_category_id = ? `;
+        await conn.query(sql, [id, parseInt(currCategories[i])]);
       }
     }
     for (let i = 0; i < categories.length; i++) {
-      if (!oldCategories.includes(categories[i])) {
-        // console.log(categories[i], "ini di insert")
+      if (!currCategories.includes(categories[i])) {
         sql = `INSERT INTO product_has_category(product_id, product_category_id) VALUES(?,?)`;
         await conn.query(sql, [id, categories[i]]);
       }
