@@ -23,14 +23,14 @@ module.exports = {
             if (dataUser.length) {
                 throw { message: "Username telah digunakan" }
             }
-            
+
             //! below is how to set data in node cache that stored in RAM
             const data = { date: new Date().toISOString(), username: username }
             verifyCache.set(username, data, 10000)
 
             //! Below is how to hash password with bcrypt
             const hashPassword = bcrypt.hashSync(password, saltRounds)
-            
+
             console.log(username, 'username belum terdaftar')
             sql = 'insert into user set ?'
             let dataInsert = {
@@ -90,8 +90,8 @@ module.exports = {
             // disini tambahin dicek dulu udah verified atau belum
             let sql = 'select * from user where username = ? '
             let [dataUser] = await conn.query(sql, [username])
-            if (dataUser[0].isVerified){
-                throw {message : "User Already Verified"}
+            if (dataUser[0].isVerified) {
+                throw { message: "User Already Verified" }
             }
             console.log(date, "ini date dari token")
             console.log(getData.date, "ini date dari cache")
@@ -110,7 +110,7 @@ module.exports = {
             return res.status(200).send(userData[0])
         } catch (error) {
             console.log(error)
-            if (error.message == "Cannot read property 'date' of undefined"){
+            if (error.message == "Cannot read property 'date' of undefined") {
                 error.message = "Link Expired!"
             }
             conn.release()
@@ -129,7 +129,7 @@ module.exports = {
         try {
             let sql = `select * from user where username = ? `
             let [dataUser] = await conn.query(sql, [username])
-            if (dataUser[0].isVerified){
+            if (dataUser[0].isVerified) {
                 throw ("User Already Verified")
             }
             //! below is how to get data from node cache
@@ -179,7 +179,7 @@ module.exports = {
                 date: getDatapass.date,
                 email: userData[0].email
             }
-            
+
             let tokenEmailPassword = createTokenEmail(dataToken)
             let filepath = path.resolve(__dirname, "../template/changePassword.html")
             let htmlString = fs.readFileSync(filepath, 'utf-8')
@@ -208,8 +208,8 @@ module.exports = {
         const conn = await mysql.getConnection()
         console.log(password)
         try {
-            if (date != getData.date){
-                throw {message: "Please use the latest Link"}
+            if (date != getData.date) {
+                throw { message: "Please use the latest Link" }
             }
             //! Below is how to hash password with bcrypt
             const hashPassword = bcrypt.hashSync(password, saltRounds)
@@ -226,7 +226,7 @@ module.exports = {
         } catch (error) {
             console.log(error)
             conn.release()
-            if (error.message == "Cannot read property 'date' of undefined"){
+            if (error.message == "Cannot read property 'date' of undefined") {
                 error.message = "Link Expired!"
             }
             res.status(500).send({ message: error.message || "server error" })

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const mysql = require("../connections/db")
 const path = require("path")
 const fs = require("fs")
@@ -256,3 +257,10 @@ module.exports = {
         }
     },
 }
+=======
+const pool = require('../connections/db');
+
+exports.readPrescription = (req, res) => {
+  res.json({ message: 'readPrescription' });
+};
+>>>>>>> develop-be

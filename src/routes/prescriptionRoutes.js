@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const express = require("express")
 const router = express.Router()
 const { prescriptionControllers } = require("../controllers")
@@ -26,3 +27,22 @@ router.patch("/custname", updatePrescriptionName)
 
 
 module.exports = router
+=======
+const express = require('express');
+const {
+  // createPrescription,
+  readPrescription,
+  // updatePrescription,
+} = require('../controllers/prescriptionControllers');
+
+const route = express.Router();
+
+// ? admin request
+// route.post('/', createPrescription);
+// ? admin request
+route.get('/', readPrescription);
+// ? admin request
+// route.patch('/:raw_material_id', updateRawMaterial);
+
+module.exports = route;
+>>>>>>> develop-be
