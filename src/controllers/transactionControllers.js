@@ -655,8 +655,11 @@ module.exports = {
                 }
                 sql += ` group by o.id order by checkedOutAt desc limit ? offset ?`
                 let [result] = await pool.query(sql, [user_id, 5, parseInt(offset)])
+                let mapresult = result.map((val) => {
+                    return { ...val, product_list: JSON.parse(val.product_list) }
+                })
                 pool.release()
-                return res.status(200).send(result)
+                return res.status(200).send(mapresult)
             }
             if (filter === 'checkout') {
                 sql += ` and status = ? and paymentProof is not null`
@@ -687,12 +690,18 @@ module.exports = {
             sql += ` group by o.id order by checkedOutAt desc limit ? offset ?`
             if (filter) {
                 let [result] = await pool.query(sql, [user_id, filter, 5, parseInt(offset)])
+                let mapresult = result.map((val) => {
+                    return { ...val, product_list: JSON.parse(val.product_list) }
+                })
                 pool.release()
-                return res.status(200).send(result)
+                return res.status(200).send(mapresult)
             }
             let [result] = await pool.query(sql, [user_id, 5, parseInt(offset)])
+            let mapresult = result.map((val) => {
+                return { ...val, product_list: JSON.parse(val.product_list) }
+            })
             pool.release()
-            return res.status(200).send(result)
+            return res.status(200).send(mapresult)
         } catch (error) {
             pool.release()
             return res.status(500).send({ message: error.message })
@@ -833,7 +842,6 @@ module.exports = {
                 return res.status(200).send(result);
             }
         } catch (error) {
-            console.log(error);
             pool.release();
             return res.status(500).send({ message: error.message });
         }
