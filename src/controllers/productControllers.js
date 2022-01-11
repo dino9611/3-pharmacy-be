@@ -107,13 +107,15 @@ exports.readProduct = async (req, res) => {
       SELECT A.*, GROUP_CONCAT(CONCAT(B.raw_material_id, ';', B.amountInUnit)) compositions
       FROM product A
       JOIN product_composition B ON A.id = B.product_id
-      WHERE A.id = ?;`;
+      WHERE NOT A.isDeleted
+      AND A.id = ?;`;
       const [result1] = await conn.query(sql, parameters);
       sql = `
       SELECT GROUP_CONCAT(B.product_category_id) categories
       FROM product A
       JOIN product_has_category B ON A.id = B.product_id
-      WHERE A.id = ?;`;
+      WHERE NOT A.isDeleted
+      AND A.id = ?;`;
       const [result2] = await conn.query(sql, parameters);
       result = { ...result1[0], ...result2[0] };
     } else {
@@ -121,6 +123,7 @@ exports.readProduct = async (req, res) => {
       sql = `
       SELECT *
       FROM product
+      WHERE NOT isDeleted
       LIMIT ?, ?;`;
       limit = parseInt(limit);
       let offset = (parseInt(page) - 1) * limit;
@@ -220,7 +223,7 @@ exports.AdminGetProducts = async (req, res) => {
   const msc = await pool.getConnection();
   let sql;
   try {
-    sql = `SELECT count(*) as product_length FROM product p`
+    sql = `SELECT count(*) as product_length FROM product p`;
     if (search) {
       sql += ` where p.productName like '${search}%'`;
     }
@@ -265,7 +268,7 @@ exports.getProducts = async (req, res) => {
   const msc = await pool.getConnection();
   let sql;
   try {
-    sql = `SELECT count(*) as product_length from product`
+    sql = `SELECT count(*) as product_length from product`;
 
     // jika ada query search maka :
     if (search) {
@@ -403,15 +406,8 @@ exports.updateProduct = async (req, res) => {
   const imagePath = image ? '/products' + `/${image[0].filename}` : null;
   const data = JSON.parse(req.body.data);
   // * req.body.data
-  const {
-    id,
-    stock,
-    productName,
-    description,
-    categories,
-    compositions,
-    oldCategories,
-  } = data;
+  const { id, stock, productName, description, categories, compositions } =
+    data;
   //? untuk setidaknya salah satu dari parameter terisi
 
   // * no raw_material_id
@@ -425,15 +421,6 @@ exports.updateProduct = async (req, res) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    // if (!(stock || productName || description || categories || compositions)){
-    //   fs.unlinkSync('./public' + imagePath);
-    //   return res.status(400).send({message: "Data not Changed"})
-    // }
-
-    // const imagePath = image ? '/products' + `/${image[0].filename}` : null;
-    // if (!imagePath) {
-    //   return res.status(400).send({ message: 'No Image Uploaded' });
-    // }
     const admin_id = req.user.id;
 
     // * agar image dibackend tidak nambah
@@ -463,7 +450,7 @@ exports.updateProduct = async (req, res) => {
     sql = 'UPDATE product SET ? WHERE id = ? ';
     await conn.query(sql, [updateData, id]);
 
-    // const productId = results.insertId
+    //? for product compositions
     sql = `
     SELECT raw_material_id id, amountInUnit
     FROM product A
@@ -482,24 +469,29 @@ exports.updateProduct = async (req, res) => {
         compositions.splice(i, 1);
       }
     });
-    // console.log('compositions', compositions);
-    // console.log('delCompositions', delCompositions);
-    // console.log('addCompositions', addCompositions);
 
-    //? for product compositions
-    // for (let i = 0; i < delCompositions.length; i++) {
-    //   let el = delCompositions[i];
-    //   await conn.query('CALL handle_delete_composition(?,?,?,?)', [
-    //     id,
-    //     parseFloat(el.id),
-    //     admin_id,
-    //   ]);
-    // }
     for (let i = 0; i < compositions.length; i++) {
       let el = compositions[i];
-      await conn.query('CALL handle_update_composition(?,?,?,?)', [
+      await conn.query('CALL handle_update_composition(?,?,?,?);', [
         id,
-        parseFloat(el.id),
+        parseInt(el.id),
+        parseFloat(el.amountInUnit),
+        admin_id,
+      ]);
+    }
+    for (let i = 0; i < delCompositions.length; i++) {
+      let el = delCompositions[i];
+      await conn.query('CALL handle_delete_composition(?,?,?);', [
+        id,
+        parseInt(el.id),
+        admin_id,
+      ]);
+    }
+    for (let i = 0; i < addCompositions.length; i++) {
+      let el = addCompositions[i];
+      await conn.query('CALL handle_create_composition(?,?,?,?);', [
+        id,
+        parseInt(el.id),
         parseFloat(el.amountInUnit),
         admin_id,
       ]);
@@ -507,12 +499,12 @@ exports.updateProduct = async (req, res) => {
 
     //? for product categories
     sql = `
-    SELECT GROUP_CONCAT(product_category_id) category_id
+    SELECT product_category_id
     FROM product A
     JOIN product_has_category B ON A.id = B.product_id
     WHERE A.id = ?;`;
     let [currCategories] = await conn.query(sql, [id]);
-    currCategories = currCategories[0].category_id.split(',');
+    currCategories = currCategories.map((el) => el.product_category_id);
 
     for (let i = 0; i < currCategories.length; i++) {
       if (!categories.includes(currCategories[i])) {
