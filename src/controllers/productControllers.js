@@ -107,13 +107,15 @@ exports.readProduct = async (req, res) => {
       SELECT A.*, GROUP_CONCAT(CONCAT(B.raw_material_id, ';', B.amountInUnit)) compositions
       FROM product A
       JOIN product_composition B ON A.id = B.product_id
-      WHERE A.id = ?;`;
+      WHERE NOT A.isDeleted
+      AND A.id = ?;`;
       const [result1] = await conn.query(sql, parameters);
       sql = `
       SELECT GROUP_CONCAT(B.product_category_id) categories
       FROM product A
       JOIN product_has_category B ON A.id = B.product_id
-      WHERE A.id = ?;`;
+      WHERE NOT A.isDeleted
+      AND A.id = ?;`;
       const [result2] = await conn.query(sql, parameters);
       result = { ...result1[0], ...result2[0] };
     } else {
@@ -121,6 +123,7 @@ exports.readProduct = async (req, res) => {
       sql = `
       SELECT *
       FROM product
+      WHERE NOT isDeleted
       LIMIT ?, ?;`;
       limit = parseInt(limit);
       let offset = (parseInt(page) - 1) * limit;

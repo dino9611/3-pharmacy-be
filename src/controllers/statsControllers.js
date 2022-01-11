@@ -173,3 +173,5 @@ exports.readRecentCartedItems = async (req, res) => {
     res.status(500).send({ message: 'server error' });
   }
 };
+
+exports.readTransactions = async (req, res) => {};
