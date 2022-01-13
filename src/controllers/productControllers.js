@@ -321,20 +321,20 @@ exports.getProductsPagination = async (req, res) => {
   let sql;
   try {
     // jika tidak ada query
-    sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+    sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, (p.productPriceRp + p.profitRp) productPriceRp, p.profitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
     join product_has_category ph on p.id = ph.product_id
     join product_category pc on ph.product_category_id = pc.id
     group by p.productName`;
 
     // jika ada query search
     if (search) {
-      sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, (p.productPriceRp + p.profitRp) productPriceRp, p.profitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id group by p.productName`;
 
       // jika ada query search dan kategori
       if (parseInt(kategori)) {
-        sql = ` select * from (SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+        sql = ` select * from (SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, (p.productPriceRp + p.profitRp) productPriceRp, p.profitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
           join product_has_category ph on p.id = ph.product_id
           join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
       }
@@ -368,7 +368,7 @@ exports.getProductsPagination = async (req, res) => {
 
     // jika ada query kategori
     if (parseInt(kategori)) {
-      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, (p.productPriceRp + p.profitRp) productPriceRp, p.profitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
       join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
     }
