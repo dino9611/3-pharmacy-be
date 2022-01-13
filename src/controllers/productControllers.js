@@ -14,6 +14,7 @@ exports.createProduct = async (req, res) => {
   const {
     productName,
     stock,
+    profit,
     description,
     categories, // array of [product_category_id]
     compositions, // array of [raw_material_id, amountInUnit]
@@ -21,6 +22,7 @@ exports.createProduct = async (req, res) => {
   if (
     !productName ||
     !stock ||
+    !profit ||
     !description ||
     !categories.length ||
     !compositions.length
