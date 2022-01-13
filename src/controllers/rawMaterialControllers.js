@@ -51,7 +51,7 @@ exports.createRawMaterial = async (req, res) => {
 // ! READ (read raw materials of a specific product or prescription is on productControllers as a user request)
 // can be modified later to filter searches
 exports.readRawMaterial = async (req, res) => {
-  let { page, limit } = req.query;
+  let { page, limit, search } = req.query;
   const { raw_material_id } = req.params;
 
   // * both page and limit queries or none at all
@@ -64,6 +64,7 @@ exports.readRawMaterial = async (req, res) => {
   let conn, sql, parameters;
   try {
     conn = await pool.getConnection();
+    search = search && `materialName LIKE '%${search}%'`;
 
     if (raw_material_id) {
       // * get specific raw material
@@ -77,6 +78,7 @@ exports.readRawMaterial = async (req, res) => {
       sql = `
       SELECT *
       FROM raw_material
+      WHERE ${search || 'TRUE'}
       LIMIT ?, ?;`;
       limit = parseInt(limit);
       let offset = (parseInt(page) - 1) * limit;
