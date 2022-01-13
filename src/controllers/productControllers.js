@@ -14,6 +14,7 @@ exports.createProduct = async (req, res) => {
   const {
     productName,
     stock,
+    profit,
     description,
     categories, // array of [product_category_id]
     compositions, // array of [raw_material_id, amountInUnit]
@@ -21,6 +22,7 @@ exports.createProduct = async (req, res) => {
   if (
     !productName ||
     !stock ||
+    !profit ||
     !description ||
     !categories.length ||
     !compositions.length
@@ -86,7 +88,7 @@ exports.createProduct = async (req, res) => {
 
 // ! READ
 exports.readProduct = async (req, res) => {
-  let { page, limit } = req.query;
+  let { page, limit, search } = req.query;
   const { product_id } = req.params;
 
   // * both page and limit queries or none at all
@@ -99,6 +101,7 @@ exports.readProduct = async (req, res) => {
   let conn, sql, parameters, result;
   try {
     conn = await pool.getConnection();
+    search = search && `productName LIKE '%${search}%'`;
 
     if (product_id) {
       // * get specific product
@@ -124,6 +127,7 @@ exports.readProduct = async (req, res) => {
       SELECT *
       FROM product
       WHERE NOT isDeleted
+      AND ${search || 'TRUE'}
       LIMIT ?, ?;`;
       limit = parseInt(limit);
       let offset = (parseInt(page) - 1) * limit;
