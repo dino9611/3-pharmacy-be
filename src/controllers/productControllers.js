@@ -14,7 +14,7 @@ exports.createProduct = async (req, res) => {
   const {
     productName,
     stock,
-    profit,
+    productProfitRp,
     description,
     categories, // array of [product_category_id]
     compositions, // array of [raw_material_id, amountInUnit]
@@ -22,7 +22,7 @@ exports.createProduct = async (req, res) => {
   if (
     !productName ||
     !stock ||
-    !profit ||
+    !productProfitRp ||
     !description ||
     !categories.length ||
     !compositions.length
@@ -40,6 +40,7 @@ exports.createProduct = async (req, res) => {
       productName,
       imagePath,
       description,
+      productProfitRp,
       // stock,
     };
     sql = `
@@ -410,8 +411,15 @@ exports.updateProduct = async (req, res) => {
   const imagePath = image ? '/products' + `/${image[0].filename}` : null;
   const data = JSON.parse(req.body.data);
   // * req.body.data
-  const { id, stock, productName, description, categories, compositions } =
-    data;
+  const {
+    id,
+    stock,
+    productName,
+    productProfitRp,
+    description,
+    categories,
+    compositions,
+  } = data;
   //? untuk setidaknya salah satu dari parameter terisi
 
   // * no raw_material_id
@@ -449,6 +457,7 @@ exports.updateProduct = async (req, res) => {
     updateData = {
       productName,
       description,
+      productProfitRp,
     };
     if (imagePath) updateData.imagePath = imagePath;
     sql = 'UPDATE product SET ? WHERE id = ? ';
