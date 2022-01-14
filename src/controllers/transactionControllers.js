@@ -4,11 +4,21 @@ const fs = require('fs');
 module.exports = {
     addToCart: async (req, res) => {
         const { user_id } = req.params;
-        const { price, qty, product_id } = req.body;
+        const { qty, product_id } = req.body;
         const pool = await mysql.getConnection();
         try {
+            let sql = `select * from user where id = ?`
+            let [cekUser] = await pool.query(sql, user_id)
+            if (!cekUser[0].isVerified) {
+                throw { message: 'User is not verified' }
+            }
+
+            sql = `select productPriceRp as price, profitRp as profit  from product where id = ?`
+            let [get_product] = await pool.query(sql, product_id)
+            const { price, profit } = get_product[0]
+
             // cari order_id berdasarkan user_id
-            let sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`;
+            sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`;
             let [order_null] = await pool.query(sql, [user_id, 'cart']);
 
             // jika tidak ditemukan, artinya order sudah mempunyai status. buat row order baru
@@ -37,6 +47,8 @@ module.exports = {
                     const dataUpdate = {
                         qty: 0,
                         isDeleted: 0,
+                        price,
+                        profit
                     };
                     await pool.query(sql, [dataUpdate, order[0].id, product_id]);
                 }
@@ -75,17 +87,19 @@ module.exports = {
                 where 3_pharmacy.order.id = ? and ci.isDeleted = ?`;
                 let [prices] = await pool.query(sql, [order[0].id, 0]);
                 let totalCounter = 0;
+                let profitCounter = 0
                 prices.forEach((val) => {
                     totalCounter += val.price * val.qty;
+                    profitCounter += val.profit * val.qty
                 });
 
                 // update totalPrice yg ada di tabel order dengan hasil dari hitung total
                 sql = `update 3_pharmacy.order set ? where id = ?`;
-                const updateTotal = { totalPrice: totalCounter };
+                const updateTotal = { totalPrice: totalCounter, profitRp: profitCounter };
                 await pool.query(sql, [updateTotal, order[0].id]);
 
                 // get tabel cart_item berdasarkan user_id
-                sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+                sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, (p.productPriceRp + p.profitRp) productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
                 join cart_item ci on 3_pharmacy.order.id = ci.order_id
                 join product p on ci.product_id = p.id
                 where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`;
@@ -99,6 +113,7 @@ module.exports = {
             const dataInsert = {
                 order_id: order[0].id,
                 price,
+                profit,
                 qty,
                 product_id,
             };
@@ -111,17 +126,19 @@ module.exports = {
             where 3_pharmacy.order.id = ? and ci.isDeleted = ?`;
             let [prices] = await pool.query(sql, [order[0].id, 0]);
             let totalCounter = 0;
+            let profitCounter = 0
             prices.forEach((val) => {
                 totalCounter += val.price * val.qty;
+                profitCounter += val.profit * val.qty
             });
 
             // update totalPrice yg ada di tabel order dengan hasil dari hitung total
             sql = `update 3_pharmacy.order set ? where id = ?`;
-            const updateTotal = { totalPrice: totalCounter };
+            const updateTotal = { totalPrice: totalCounter, profitRp: profitCounter };
             await pool.query(sql, [updateTotal, order[0].id]);
 
             // get tabel cart_item berdasarkan user_id
-            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, (p.productPriceRp + p.profitRp) productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
             where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`;
@@ -129,7 +146,6 @@ module.exports = {
             pool.release();
             return res.status(200).send(result);
         } catch (error) {
-            console.log(error);
             pool.release();
             return res.status(500).send({ message: error.message });
         }
@@ -165,17 +181,19 @@ module.exports = {
             where 3_pharmacy.order.id = ? and ci.isDeleted = ?`;
             let [prices] = await pool.query(sql, [order[0].id, 0]);
             let totalCounter = 0;
+            let profitCounter = 0
             prices.forEach((val) => {
                 totalCounter += val.price * val.qty;
+                profitCounter += val.profit * val.qty
             });
 
             // update totalPrice yg ada di tabel order dengan hasil dari hitung total
             sql = `update 3_pharmacy.order set ? where id = ?`;
-            const updateTotal = { totalPrice: totalCounter };
+            const updateTotal = { totalPrice: totalCounter, profitRp: profitCounter };
             await pool.query(sql, [updateTotal, order[0].id]);
 
             // get tabel cart_item berdasarkan user_id
-            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, (p.productPriceRp + p.profitRp) productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
             where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`;
@@ -183,7 +201,6 @@ module.exports = {
             pool.release();
             return res.status(200).send(result);
         } catch (error) {
-            console.log(error);
             pool.release();
             return res.status(500).send({ message: error.message });
         }
@@ -192,7 +209,7 @@ module.exports = {
         const { user_id } = req.params;
         const pool = await mysql.getConnection();
         try {
-            let sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+            let sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, (p.productPriceRp + p.profitRp) productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
             where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`;
@@ -200,7 +217,6 @@ module.exports = {
             pool.release();
             return res.status(200).send(result);
         } catch (error) {
-            console.log(error);
             pool.release();
             return res.status(500).send({ message: error.message });
         }
@@ -251,17 +267,19 @@ module.exports = {
             where 3_pharmacy.order.id = ? and ci.isDeleted = ?`;
             let [prices] = await pool.query(sql, [order[0].id, 0]);
             let totalCounter = 0;
+            let profitCounter = 0
             prices.forEach((val) => {
                 totalCounter += val.price * val.qty;
+                profitCounter += val.profit * val.qty
             });
 
             // update totalPrice yg ada di tabel order dengan hasil dari hitung total
             sql = `update 3_pharmacy.order set ? where id = ?`;
-            const updateTotal = { totalPrice: totalCounter };
+            const updateTotal = { totalPrice: totalCounter, profitRp: profitCounter };
             await pool.query(sql, [updateTotal, order[0].id]);
 
             // get tabel cart_item berdasarkan user_id
-            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, (p.productPriceRp + p.profitRp) productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
             where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`;
@@ -269,14 +287,13 @@ module.exports = {
             pool.release();
             return res.status(200).send(result);
         } catch (error) {
-            console.log(error);
             pool.release();
             return res.status(500).send({ message: error.message });
         }
     },
     checkout: async (req, res) => {
         const { user_id } = req.params;
-        const { checkedOutAt, address, bank_id, shippingCost } = req.body;
+        const { address, bank_id } = req.body;
         const pool = await mysql.getConnection();
         try {
             // dapatkan informasi order berdasarkan user_id
@@ -301,17 +318,19 @@ module.exports = {
 
             // perbarui row
             sql = `update 3_pharmacy.order set ? where id = ?`;
+            var tzoffset = (new Date()).getTimezoneOffset() * 60000;
+            var localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 19).replace('T', ' ');
             const dataUpdate = {
-                checkedOutAt,
+                checkedOutAt: localISOTime,
                 address,
                 status: 'checkout',
                 bank_id,
-                shippingCost,
+                shippingCost: 9000,
             };
             await pool.query(sql, [dataUpdate, order[0].id]);
 
             // get tabel cart_item berdasarkan user_id
-            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, p.productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
+            sql = `SELECT user_id, ci.order_id, ci.price, ci.qty, ci.createdAt, ci.isDeleted, ci.product_id, p.productName, (p.productPriceRp + p.profitRp) productPriceRp, p.stock, p.imagePath, p.description FROM 3_pharmacy.order
             join cart_item ci on 3_pharmacy.order.id = ci.order_id
             join product p on ci.product_id = p.id
             where user_id = ? and ci.isDeleted = ? and status = ? order by ci.createdAt desc`;
@@ -319,7 +338,6 @@ module.exports = {
             pool.release();
             return res.status(200).send(result);
         } catch (error) {
-            console.log(error);
             pool.release();
             return res.status(500).send({ message: error.message });
         }
@@ -339,7 +357,6 @@ module.exports = {
             pool.release();
             return res.status(200).send(result);
         } catch (error) {
-            console.log(error);
             pool.release();
             return res.status(500).send({ message: error.message });
         }
@@ -375,7 +392,6 @@ module.exports = {
                     .status(200)
                     .send({ message: 'upload product proof success' });
             } catch (error) {
-                console.log(error);
                 pool.release();
                 if (imagePath) {
                     fs.unlinkSync('./public' + imagePath);
@@ -411,7 +427,6 @@ module.exports = {
                     .status(200)
                     .send({ message: 'upload prescription proof success' });
             } catch (error) {
-                console.log(error);
                 pool.release();
                 if (imagePath) {
                     fs.unlinkSync('./public' + imagePath);
@@ -612,7 +627,6 @@ module.exports = {
             return res.status(200).send(result)
         } catch (error) {
             pool.release()
-            console.log(error.message);
             return res.status(500).send({ message: error.message })
         }
     },
@@ -631,7 +645,7 @@ module.exports = {
                         '{\"id\": \"', p.id, '\",',
                         '\"productName\": \"', p.productName, '\",',
                         '\"imagePath\": \"', p.imagePath, '\",',
-                        '\"productPriceRp\": \"', p.productPricerp, '\",',
+                        '\"productPriceRp\": \"', (p.productPriceRp + p.profitRp), '\",',
                         '\"qty\": \"', ci.qty, '\"}'
                     )
                 ),
@@ -851,7 +865,7 @@ module.exports = {
         const pool = await mysql.getConnection();
         try {
             let sql = `select 
-            o.id, o.totalPrice, o.checkedOutAt, o.address, o.paymentProof,
+            o.id, (o.totalPrice + o.profitRp) totalPrice, o.checkedOutAt, o.address, o.paymentProof,
             o.status, o.shippingCost, b.bank, u.username
             from 3_pharmacy.order o
             join bank b on o.bank_id = b.id
@@ -872,7 +886,10 @@ module.exports = {
             let sql = `SELECT * FROM cart_item ci
             join product p on ci.product_id = p.id
             where order_id = ? and ci.isDeleted = 0`
-            let [result] = await pool.query(sql, order_id)
+            let [cek] = await pool.query(sql, order_id)
+            let result = cek.map((val) => {
+                return { ...val, productPriceRp: val.productPriceRp + val.profitRp }
+            })
             pool.release()
             return res.status(200).send(result)
         } catch (error) {
