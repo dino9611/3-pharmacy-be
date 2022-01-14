@@ -14,15 +14,16 @@ exports.createProduct = async (req, res) => {
   const {
     productName,
     stock,
-    profit,
+    productProfitRp,
     description,
     categories, // array of [product_category_id]
     compositions, // array of [raw_material_id, amountInUnit]
   } = data;
+  console.log(data);
   if (
     !productName ||
     !stock ||
-    !profit ||
+    !productProfitRp ||
     !description ||
     !categories.length ||
     !compositions.length
@@ -40,6 +41,7 @@ exports.createProduct = async (req, res) => {
       productName,
       imagePath,
       description,
+      productProfitRp,
       // stock,
     };
     sql = `
@@ -272,16 +274,16 @@ exports.getProducts = async (req, res) => {
   const msc = await pool.getConnection();
   let sql;
   try {
-    sql = `SELECT count(*) as product_length from product`;
+    sql = `SELECT count(*) as product_length from product p where p.isDeleted = 0`;
 
     // jika ada query search maka :
     if (search) {
-      sql = `select count(*) as product_length from product where productName like '${search}%'`;
+      sql = `select count(*) as product_length from product where productName like '${search}%' and isDeleted = 0`;
       if (parseInt(kategori)) {
         sql = `SELECT count(*) as product_length FROM product p
         join product_has_category ph on p.id = ph.product_id
         join product_category pc on ph.product_category_id = pc.id
-        where pc.id = ? and productName like '${search}%'`;
+        where pc.id = ? and productName like '${search}%' and p.isDeleted = 0`;
       }
 
       // jika ada query search dan kategori maka :
@@ -299,7 +301,7 @@ exports.getProducts = async (req, res) => {
     if (parseInt(kategori)) {
       sql = `SELECT count(*) as product_length FROM product p
       join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
+      join product_category pc on ph.product_category_id = pc.id where pc.id = ? p.isDeleted = 0`;
       let [result] = await msc.query(sql, parseInt(kategori));
       msc.release();
       return res.status(200).send(result);
@@ -321,20 +323,22 @@ exports.getProductsPagination = async (req, res) => {
   let sql;
   try {
     // jika tidak ada query
-    sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+    sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, (p.productPriceRp + p.productProfitRp) productPriceRp, p.productProfitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
     join product_has_category ph on p.id = ph.product_id
     join product_category pc on ph.product_category_id = pc.id
+    where p.isDeleted = 0
     group by p.productName`;
 
     // jika ada query search
     if (search) {
-      sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, (p.productPriceRp + p.productProfitRp) productPriceRp, p.productProfitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id group by p.productName`;
+      join product_category pc on ph.product_category_id = pc.id
+      group by p.productName`;
 
       // jika ada query search dan kategori
       if (parseInt(kategori)) {
-        sql = ` select * from (SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+        sql = ` select * from (SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, (p.productPriceRp + p.productProfitRp) productPriceRp, p.productProfitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
           join product_has_category ph on p.id = ph.product_id
           join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
       }
@@ -349,7 +353,7 @@ exports.getProductsPagination = async (req, res) => {
       if (filter === 'default') {
         sql += ' order by p.id asc';
       }
-      sql += `) as sn where sn.productName like '${search}%'`;
+      sql += `) as sn where sn.productName like '${search}%' and sn.isDeleted = 0`;
       if (parseInt(kategori)) {
         sql += ' limit ? offset ?';
         let [result] = await msc.query(sql, [
@@ -368,9 +372,10 @@ exports.getProductsPagination = async (req, res) => {
 
     // jika ada query kategori
     if (parseInt(kategori)) {
-      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, p.productPriceRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
+      sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, (p.productPriceRp + p.productProfitRp) productPriceRp, p.productProfitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
+      join product_category pc on ph.product_category_id = pc.id
+      where pc.id = ? and p.isDeleted = 0`;
     }
 
     // jika ada query filter
@@ -410,8 +415,15 @@ exports.updateProduct = async (req, res) => {
   const imagePath = image ? '/products' + `/${image[0].filename}` : null;
   const data = JSON.parse(req.body.data);
   // * req.body.data
-  const { id, stock, productName, description, categories, compositions } =
-    data;
+  const {
+    id,
+    stock,
+    productName,
+    productProfitRp,
+    description,
+    categories,
+    compositions,
+  } = data;
   //? untuk setidaknya salah satu dari parameter terisi
 
   // * no raw_material_id
@@ -449,6 +461,7 @@ exports.updateProduct = async (req, res) => {
     updateData = {
       productName,
       description,
+      productProfitRp,
     };
     if (imagePath) updateData.imagePath = imagePath;
     sql = 'UPDATE product SET ? WHERE id = ? ';
