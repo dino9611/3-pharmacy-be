@@ -19,6 +19,7 @@ exports.createProduct = async (req, res) => {
     categories, // array of [product_category_id]
     compositions, // array of [raw_material_id, amountInUnit]
   } = data;
+  console.log(data);
   if (
     !productName ||
     !stock ||
@@ -273,16 +274,16 @@ exports.getProducts = async (req, res) => {
   const msc = await pool.getConnection();
   let sql;
   try {
-    sql = `SELECT count(*) as product_length from product`;
+    sql = `SELECT count(*) as product_length from product p where p.isDeleted = 0`;
 
     // jika ada query search maka :
     if (search) {
-      sql = `select count(*) as product_length from product where productName like '${search}%'`;
+      sql = `select count(*) as product_length from product where productName like '${search}%' and isDeleted = 0`;
       if (parseInt(kategori)) {
         sql = `SELECT count(*) as product_length FROM product p
         join product_has_category ph on p.id = ph.product_id
         join product_category pc on ph.product_category_id = pc.id
-        where pc.id = ? and productName like '${search}%'`;
+        where pc.id = ? and productName like '${search}%' and p.isDeleted = 0`;
       }
 
       // jika ada query search dan kategori maka :
@@ -300,7 +301,7 @@ exports.getProducts = async (req, res) => {
     if (parseInt(kategori)) {
       sql = `SELECT count(*) as product_length FROM product p
       join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
+      join product_category pc on ph.product_category_id = pc.id where pc.id = ? p.isDeleted = 0`;
       let [result] = await msc.query(sql, parseInt(kategori));
       msc.release();
       return res.status(200).send(result);
@@ -325,13 +326,15 @@ exports.getProductsPagination = async (req, res) => {
     sql = `SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, (p.productPriceRp + p.productProfitRp) productPriceRp, p.productProfitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
     join product_has_category ph on p.id = ph.product_id
     join product_category pc on ph.product_category_id = pc.id
+    where p.isDeleted = 0
     group by p.productName`;
 
     // jika ada query search
     if (search) {
       sql = `select * from (SELECT p.id, p.productName, group_concat(pc.categoryName separator ', ') as categoryName, (p.productPriceRp + p.productProfitRp) productPriceRp, p.productProfitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id group by p.productName`;
+      join product_category pc on ph.product_category_id = pc.id
+      group by p.productName`;
 
       // jika ada query search dan kategori
       if (parseInt(kategori)) {
@@ -350,7 +353,7 @@ exports.getProductsPagination = async (req, res) => {
       if (filter === 'default') {
         sql += ' order by p.id asc';
       }
-      sql += `) as sn where sn.productName like '${search}%'`;
+      sql += `) as sn where sn.productName like '${search}%' and sn.isDeleted = 0`;
       if (parseInt(kategori)) {
         sql += ' limit ? offset ?';
         let [result] = await msc.query(sql, [
@@ -371,7 +374,8 @@ exports.getProductsPagination = async (req, res) => {
     if (parseInt(kategori)) {
       sql = `SELECT p.id, p.productName, pc.categoryName, pc.id as cat_id, (p.productPriceRp + p.productProfitRp) productPriceRp, p.productProfitRp, p.stock, p.imagePath, p.description, p.isDeleted, p.createdAt, p.updatedAt FROM product p
       join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id where pc.id = ?`;
+      join product_category pc on ph.product_category_id = pc.id
+      where pc.id = ? and p.isDeleted = 0`;
     }
 
     // jika ada query filter

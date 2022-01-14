@@ -66,7 +66,7 @@ module.exports = {
       const template = handlebars.compile(htmlString);
       const htmlToEmail = template({ name: username, token: emailToken });
       transporter.sendMail({
-        from: 'Tokobat <arianzas1997@gmail.com>',
+        from: `Tokobat <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Account Verifications',
         html: htmlToEmail,
@@ -189,7 +189,7 @@ module.exports = {
       });
       // console.log(htmlToEmail)
       transporter.sendMail({
-        from: 'Tokobat <arianzas1997@gmail.com>',
+        from: `Tokobat <${process.env.EMAIL_USER}>`,
         to: userData[0].email,
         subject: 'Password Change',
         html: htmlToEmail,

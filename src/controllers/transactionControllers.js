@@ -13,9 +13,13 @@ module.exports = {
         throw { message: 'User is not verified' };
       }
 
-      sql = `select productPriceRp as price, productProfitRp as profit  from product where id = ?`;
+      sql = `select productPriceRp as price, productProfitRp as profit, isDeleted  from product where id = ?`;
       let [get_product] = await pool.query(sql, product_id);
-      const { price, profit } = get_product[0];
+      const { price, profit, isDeleted } = get_product[0];
+
+      if (isDeleted) {
+        return res.statusCode(400);
+      }
 
       // cari order_id berdasarkan user_id
       sql = `select * from 3_pharmacy.order where user_id = ? and status = ?`;
@@ -718,6 +722,7 @@ module.exports = {
           sql +=
             ' and checkedOutAt >= (select date_sub(now(), interval 1 week))';
         }
+
         if (range === 'month') {
           sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`;
         }
@@ -749,7 +754,7 @@ module.exports = {
   },
   transactionRequest: async (req, res) => {
     const { order_id } = req.params;
-    const { type } = req.body;
+    const { type, limit } = req.body;
     const pool = await mysql.getConnection();
     try {
       // cari row di tabel order berdasarkan id
@@ -800,8 +805,9 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
-                order by checkedOutAt desc`;
-        let [result] = await pool.query(sql);
+                order by checkedOutAt desc
+                limit ?`;
+        let [result] = await pool.query(sql, limit);
         pool.release();
         return res.status(200).send(result);
       }
@@ -838,8 +844,9 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
-                order by checkedOutAt desc`;
-        let [result] = await pool.query(sql);
+                order by checkedOutAt desc
+                limit ?`;
+        let [result] = await pool.query(sql, limit);
         pool.release();
         return res.status(200).send(result);
       }
@@ -857,8 +864,9 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
-                order by checkedOutAt desc`;
-        let [result] = await pool.query(sql);
+                order by checkedOutAt desc
+                limit ?`;
+        let [result] = await pool.query(sql, limit);
         pool.release();
         return res.status(200).send(result);
       }
@@ -876,8 +884,9 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
-                order by checkedOutAt desc`;
-        let [result] = await pool.query(sql);
+                order by checkedOutAt desc
+                limit ?`;
+        let [result] = await pool.query(sql, limit);
         pool.release();
         return res.status(200).send(result);
       }
