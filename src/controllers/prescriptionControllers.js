@@ -43,117 +43,6 @@ module.exports = {
             select p.user_id,u.username,p.id, p.prescriptionName, p.image, p.paymentProof, p.status 
             from prescription p 
             join user u 
-<<<<<<< HEAD
-            on p.user_id = u.id where true ${querySql} `
-
-            let [result] = await conn.query(sql)
-            conn.release()
-            return res.status(200).send(result)
-        } catch (error) {
-            conn.release()
-            console.log(error)
-            res.status(500).send({ message: error.message || "server error" })
-        }
-    },
-    createPrescription: async (req,res) => {
-        const {id,medicineName, qty, compositions} = req.body
-
-        let conn, sql, insertData
-        conn = await mysql.getConnection()
-        try {
-            await conn.beginTransaction()
-            console.log(id)
-            //? ini initial input untuk tabel prescribed medicine
-            sql = `insert into prescribed_medicine set ? `
-            insertData= {
-                medicineName,
-                prescription_id : id
-            }
-            const [result] = await conn.query(sql, insertData)
-            console.log(insertData.prescription_id)
-
-
-            //? untuk create prescription compositions
-            const productId = result.insertId;
-            const admin_id = 2;
-
-            for(let i = 0 ; i < compositions.length ; i++ ){
-                let val = compositions[i]
-                await conn.query('CALL handle_create_medicine_comp(?, ?, ?, ?);', [
-                    productId,
-                    parseFloat(val[0]), //? raw material_ID
-                    parseFloat(val[1]), //? amount in Unit
-                    admin_id,
-                ])
-            }
-
-            //? set QTY
-            sql = 'CALL handle_update_qty(?, ?, ?)';
-            await conn.query(sql, [productId, qty, admin_id])
-            console.log("berhasil")
-            await conn.commit()
-            conn.release()
-            res.status(200).send({message: "berhasil"})
-        } catch (error) {
-            await conn.rollback()
-            conn.release()
-            res.status(500).send({ message: error.message || "server error" })
-        }
-    },
-    updateStatus : async(req,res) => {
-        const {id, nextStatus} = req.body
-
-        let conn, sql, updateData
-        try {
-            conn = await mysql.getConnection()
-            updateData = {
-                status : nextStatus
-            }
-            sql = `update prescription set ? where id = ? `
-            await conn.query(sql, [updateData, id])
-            res.status(200).send({message : "berhasil"})
-        } catch (error) {
-            console.log(error)
-            res.status(500).send({ message: error.message || "server error" })
-        }
-    },
-    updatePrescriptionName : async(req,res) => {
-        const {id, prescriptionName} = req.body
-
-        let conn, sql, updateData
-        conn = await mysql.getConnection()
-        try {
-            updateData = {
-                prescriptionName
-            }
-            sql = `update prescription set ? where id = ? `
-            await conn.query(sql, [updateData, id])
-            res.status(200).send({message : "berhasil"})
-        } catch (error) {
-            console.log(error)
-            res.status(500).send({ message: error.message || "server error" })
-        }
-    },
-    getDetails : async(req,res) => {
-        const {id} = req.params
-        const conn = await mysql.getConnection()
-        try {
-            let sql= `select * from prescribed_medicine where prescription_id = ? ;`
-            let [result] = await conn.query(sql, id)
-            conn.release()
-            return res.status(200).send(result)
-        } catch (error) {
-            conn.release()
-            console.log(error)
-            res.status(500).send({ message: error.message || "server error" })
-        }
-    },
-    getMedicineName : async (req,res) => {
-        const {id} = req.params
-        const conn = await mysql.getConnection()
-        try {
-            let sql= `select p.user_id, u.username, p.id, p.prescriptionName, p.image, p.paymentProof, p.status, pm.medicineName
-=======
             on p.user_id = u.id where true ${querySql} `;
 
       let [result] = await conn.query(sql);
@@ -293,7 +182,6 @@ module.exports = {
     const conn = await mysql.getConnection();
     try {
       let sql = `select p.user_id, u.username, p.id, p.prescriptionName, p.image, p.paymentProof, p.status, pm.medicineName
->>>>>>> develop-be
             from prescription p
             join user u
             on p.user_id = u.id
@@ -317,7 +205,7 @@ module.exports = {
     let sql;
     const conn = await mysql.getConnection();
     try {
-      sql = `select p.user_id, u.username, p.id, p.prescriptionName, p.image, p.paymentProof, p.status
+      sql = `select p.user_id, u.username, p.id, p.prescriptionName, p.image, p.paymentProof, p.status, p.profitRp, p.totalPriceRp
             from prescription p
             join user u
             on p.user_id = u.id
@@ -364,4 +252,21 @@ module.exports = {
       return res.status(500).send({ message: error.message });
     }
   },
+  updateCostprofit : async (req,res) => {
+    const { cost, profit, id } = req.body;
+    let conn, sql, updateData
+    conn = await mysql.getConnection()
+    try {
+      updateData = {
+        totalPriceRp : cost,
+        profitRp : profit
+      }
+      sql = `update prescription set ? where id = ? `
+      await conn.query(sql, [updateData, id])
+      res.status(200).send({message: 'berhasil'})
+    } catch (error) {
+      console.log(error)
+      res.status(500).send({message: error.message || 'server error'})
+    }
+  }
 };

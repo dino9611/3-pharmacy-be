@@ -11,6 +11,7 @@ const {
   getMedicineName,
   getUserCustom,
   paymentProof,
+  updateCostprofit
 } = prescriptionControllers;
 const { verifyAccessToken } = require('../helpers/verifyToken');
 const { verifyAdmin } = require('../middlewares/verifyAdmin');
@@ -40,5 +41,6 @@ router.post('/upload/:id', customUploader, customUpload);
 router.post('/create', verifyAccessToken, verifyAdmin, createPrescription);
 router.patch('/nextstatus', updateStatus);
 router.patch('/custname', updatePrescriptionName);
+router.patch('/costprofit', updateCostprofit)
 
 module.exports = router;
