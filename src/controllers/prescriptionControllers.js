@@ -205,7 +205,7 @@ module.exports = {
     let sql;
     const conn = await mysql.getConnection();
     try {
-      sql = `select p.user_id, u.username, p.id, p.prescriptionName, p.image, p.paymentProof, p.status
+      sql = `select p.user_id, u.username, p.id, p.prescriptionName, p.image, p.paymentProof, p.status, p.profitRp, p.totalPriceRp
             from prescription p
             join user u
             on p.user_id = u.id
@@ -252,4 +252,21 @@ module.exports = {
       return res.status(500).send({ message: error.message });
     }
   },
+  updateCostprofit : async (req,res) => {
+    const { cost, profit, id } = req.body;
+    let conn, sql, updateData
+    conn = await mysql.getConnection()
+    try {
+      updateData = {
+        totalPriceRp : cost,
+        profitRp : profit
+      }
+      sql = `update prescription set ? where id = ? `
+      await conn.query(sql, [updateData, id])
+      res.status(200).send({message: 'berhasil'})
+    } catch (error) {
+      console.log(error)
+      res.status(500).send({message: error.message || 'server error'})
+    }
+  }
 };
