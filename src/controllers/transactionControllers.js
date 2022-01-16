@@ -754,7 +754,7 @@ module.exports = {
   },
   transactionRequest: async (req, res) => {
     const { order_id } = req.params;
-    const { type, limit } = req.body;
+    const { type, limit, user_id } = req.body;
     const pool = await mysql.getConnection();
     try {
       // cari row di tabel order berdasarkan id
@@ -881,12 +881,13 @@ module.exports = {
         // get semua data order
         sql = `select 
                 order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
-                order.status, order.shippingCost, order.bank_id, u.username
+                order.status, order.shippingCost, order.bank_id, u.id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
+                where u.id = ?
                 order by checkedOutAt desc
                 limit ?`;
-        let [result] = await pool.query(sql, limit);
+        let [result] = await pool.query(sql, [user_id, 5]);
         pool.release();
         return res.status(200).send(result);
       }
@@ -923,7 +924,7 @@ module.exports = {
             where order_id = ? and ci.isDeleted = 0`;
       let [cek] = await pool.query(sql, order_id);
       let result = cek.map((val) => {
-        return { ...val, productPriceRp: val.productPriceRp + val.profitRp };
+        return { ...val, productPriceRp: val.productPriceRp + val.productProfitRp };
       });
       pool.release();
       return res.status(200).send(result);
