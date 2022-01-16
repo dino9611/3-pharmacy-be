@@ -174,4 +174,31 @@ exports.readRecentCartedItems = async (req, res) => {
   }
 };
 
-exports.readTransactions = async (req, res) => {};
+exports.readSalesPieChart = async (req, res) => {
+  let { yearMonthStart, yearMonthEnd } = req.query;
+  let sql;
+  try {
+    sql = `
+    SELECT (SELECT SUM(profitRp + totalPrice)
+    FROM 3_pharmacy.order
+    WHERE status IN('paymentAcc', 'processing', 'otw', 'delivered')
+    AND checkedOutAt BETWEEN ? AND LAST_DAY(?)) orderSales,
+    (SELECT SUM(profitRp + totalPriceRp)
+    FROM 3_pharmacy.prescription
+    WHERE status IN('paymentAcc', 'processing', 'otw', 'delivered')
+    AND expiredAt BETWEEN ? AND LAST_DAY(?)) prescriptionSales;`;
+    const [result] = await pool.query(sql, [
+      yearMonthStart,
+      yearMonthEnd,
+      yearMonthStart,
+      yearMonthEnd,
+    ]);
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'server error' });
+  }
+};
+
+exports.readTransactionsPieChart = async (req, res) => {};

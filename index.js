@@ -1,8 +1,13 @@
 require('dotenv').config();
-require('./src/event_scheduler/checkPrescriptionPayment'); // * initialize event scheduler
+// require('./src/event_scheduler/checkPrescriptionPayment'); // * initialize event scheduler
 
 const express = require('express');
-const { authRoutes, profileRoutes, transactionRoutes, prescriptionRoutes } = require('./src/routes');
+const {
+  authRoutes,
+  profileRoutes,
+  transactionRoutes,
+  prescriptionRoutes,
+} = require('./src/routes');
 const app = express();
 const PORT = process.env.PORT || 2003;
 const cors = require('cors');
@@ -28,7 +33,7 @@ app.use('/profile', profileRoutes);
 app.use('/raw_material', require('./src/routes/rawMaterialRoutes'));
 app.use('/product', require('./src/routes/productRoutes'));
 app.use('/auth', require('./src/routes/authRoutes'));
-app.use('/custom', prescriptionRoutes)
+app.use('/custom', prescriptionRoutes);
 app.use('/stats', require('./src/routes/statsRoutes'));
 app.use('/transaction', transactionRoutes);
 
