@@ -280,4 +280,43 @@ module.exports = {
       return res.status(500).send({ message: error.message });
     }
   },
+  userLength: async (req, res) => {
+    const { username } = req.query
+    const pool = await mysql.getConnection()
+    try {
+      let sql = `select count(*) user_length from user where role = ? and username like '${username}%'`
+      let [result] = await pool.query(sql, 'user')
+      pool.release()
+      return res.status(200).send(result)
+    } catch (error) {
+      pool.release()
+      return res.status(500).send({ message: error.message })
+    }
+  },
+  userList: async (req, res) => {
+    const { username, limit, offset } = req.query
+    const pool = await mysql.getConnection()
+    try {
+      let sql = `select * from user where role = ? and username like '${username}%' limit ? offset ?`
+      let [result] = await pool.query(sql, ['user', parseInt(limit), parseInt(offset)])
+      pool.release()
+      return res.status(200).send(result)
+    } catch (error) {
+      pool.release()
+      return res.status(500).send({ message: error.message })
+    }
+  },
+  userDetail: async (req, res) => {
+    const { id } = req.params
+    const pool = await mysql.getConnection()
+    try {
+      let sql = `select * from user where id = ? and role = ?`
+      let [result] = await pool.query(sql, [id, 'user'])
+      pool.release()
+      return res.status(200).send(result)
+    } catch (error) {
+      pool.release()
+      return res.status(500).send({ message: error.message })
+    }
+  }
 };
