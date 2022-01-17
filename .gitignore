@@ -1,8 +1,8 @@
 node_modules/
-public/*
 .env
-public/avatar/*
-public/payment/*
-public/paymentproof/*
-public/prescription/*
+# public/*
+# public/avatar/*
+# public/payment/*
+# public/paymentproof/*
+# public/prescription/*
 Empass.js
