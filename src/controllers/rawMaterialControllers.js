@@ -15,6 +15,7 @@ exports.createRawMaterial = async (req, res) => {
   let conn, sql, insertData;
   try {
     conn = await pool.getConnection();
+    await conn.beginTransaction();
 
     // * insert new raw material
     sql = `INSERT INTO raw_material SET ?`;
@@ -36,12 +37,14 @@ exports.createRawMaterial = async (req, res) => {
     insertData = { raw_material_id, inventoryChange, admin_id };
     await conn.query(sql, insertData);
 
+    await conn.commit();
     conn.release();
     return res.status(200).json({
       message: 'create raw material success',
       insertId: insRawMaterial.insertId,
     });
   } catch (error) {
+    await conn.rollback();
     conn.release();
     res.status(500).json({ message: error.message });
     console.log(error);
@@ -103,6 +106,7 @@ exports.readRawMaterialRecord = async (req, res) => {
   let conn, sql;
   try {
     conn = await pool.getConnection();
+
     search = search && `materialName LIKE '%${search}%'`;
 
     sql = `SELECT materialName, SUM(inventoryChange) inventoryChange, unitPerBottle, unit
@@ -149,6 +153,7 @@ exports.updateRawMaterial = async (req, res) => {
   let conn, sql;
   try {
     conn = await pool.getConnection();
+    await conn.beginTransaction();
 
     // ! complex updates
     const admin_id = req.user.id; // ! from req.user
@@ -183,9 +188,11 @@ exports.updateRawMaterial = async (req, res) => {
       result = (await conn.query(sql, [updateData, raw_material_id]))[0];
     }
 
+    await conn.commit();
     conn.release();
     res.status(200).json({ result, handleBottleChange, handlePriceChange });
   } catch (error) {
+    await conn.rollback();
     conn.release();
     res.status(500).json({ message: error.message });
     console.log(error);

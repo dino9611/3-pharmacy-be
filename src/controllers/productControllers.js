@@ -34,6 +34,7 @@ exports.createProduct = async (req, res) => {
   let conn, sql, insertData;
   try {
     conn = await pool.getConnection();
+    await conn.beginTransaction();
 
     // * create initial product instance
     insertData = {
@@ -77,9 +78,11 @@ exports.createProduct = async (req, res) => {
     sql = 'CALL handle_update_stock(?, ?, ?);';
     await conn.query(sql, [productId, stock, admin_id]);
 
+    await conn.commit();
     conn.release();
     res.status(200).json({ productId });
   } catch (error) {
+    await conn.rollback();
     fs.unlinkSync('./public' + imagePath);
     console.log(error);
     conn.release();
