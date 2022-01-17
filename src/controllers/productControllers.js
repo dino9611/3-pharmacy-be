@@ -19,7 +19,6 @@ exports.createProduct = async (req, res) => {
     categories, // array of [product_category_id]
     compositions, // array of [raw_material_id, amountInUnit]
   } = data;
-  console.log(data);
   if (
     !productName ||
     !stock ||
@@ -82,9 +81,9 @@ exports.createProduct = async (req, res) => {
     res.status(200).json({ productId });
   } catch (error) {
     fs.unlinkSync('./public' + imagePath);
+    console.log(error);
     conn.release();
     res.status(500).json({ message: error.message });
-    console.log(error);
   }
 };
 
@@ -212,8 +211,6 @@ exports.getEdit = async (req, res) => {
       ON pc.raw_material_id = r.id
       where product_id = ? ; `;
     let [dataGet] = await conn.query(sql, id);
-    console.log(id);
-    console.log('masuk sini');
     conn.release();
     return res.status(200).send([results, dataGet]);
   } catch (error) {
@@ -301,7 +298,7 @@ exports.getProducts = async (req, res) => {
     if (parseInt(kategori)) {
       sql = `SELECT count(*) as product_length FROM product p
       join product_has_category ph on p.id = ph.product_id
-      join product_category pc on ph.product_category_id = pc.id where pc.id = ? p.isDeleted = 0`;
+      join product_category pc on ph.product_category_id = pc.id where pc.id = ? and p.isDeleted = 0`;
       let [result] = await msc.query(sql, parseInt(kategori));
       msc.release();
       return res.status(200).send(result);
@@ -310,6 +307,7 @@ exports.getProducts = async (req, res) => {
     msc.release();
     return res.status(200).send(result);
   } catch (error) {
+    console.log(error);
     msc.release();
     return res.status(500).send({ message: error.message });
   }

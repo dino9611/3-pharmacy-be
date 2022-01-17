@@ -137,7 +137,7 @@ module.exports = {
       updateData = {
         status: nextStatus,
       };
-      sql = `update prescription set ?, expiredAt = NOW() + INTERVAL 1 MINUTE where id = ? `;
+      sql = `update prescription set ?, expiredAt = NOW() + INTERVAL 2 HOUR where id = ? `;
       await conn.query(sql, [updateData, id]);
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
