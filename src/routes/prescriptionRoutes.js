@@ -11,7 +11,8 @@ const {
   getMedicineName,
   getUserCustom,
   paymentProof,
-  updateCostprofit
+  userConfirmDelivery,
+  updateCostprofit,
 } = prescriptionControllers;
 const { verifyAccessToken } = require('../helpers/verifyToken');
 const { verifyAdmin } = require('../middlewares/verifyAdmin');
@@ -29,6 +30,7 @@ router.use(verifyAccessToken);
 
 //! route user
 router.get('/usercustom', getUserCustom);
+router.post('/confirm_delivery', userConfirmDelivery);
 router.patch('/update/payment/:id', paymentUploader, paymentProof);
 
 router.use(verifyAdmin);
@@ -37,10 +39,10 @@ router.use(verifyAdmin);
 router.get('/', getDataCustom);
 router.get('/details/:id', getDetails);
 router.get('/medicine/:id', getMedicineName);
-router.post('/upload/:id', customUploader, customUpload);
+router.post('/upload', customUploader, customUpload);
 router.post('/create', verifyAccessToken, verifyAdmin, createPrescription);
 router.patch('/nextstatus', updateStatus);
 router.patch('/custname', updatePrescriptionName);
-router.patch('/costprofit', updateCostprofit)
+router.patch('/costprofit', updateCostprofit);
 
 module.exports = router;

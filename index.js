@@ -9,7 +9,12 @@ const bearer = require('express-bearer-token');
 
 // ! body parse
 
-const { authRoutes, profileRoutes, transactionRoutes, prescriptionRoutes } = require('./src/routes');
+const {
+  authRoutes,
+  profileRoutes,
+  transactionRoutes,
+  prescriptionRoutes,
+} = require('./src/routes');
 app.use(
   cors({
     exposedHeaders: ['access-token'],
@@ -28,7 +33,7 @@ app.use('/profile', profileRoutes);
 app.use('/raw_material', require('./src/routes/rawMaterialRoutes'));
 app.use('/product', require('./src/routes/productRoutes'));
 app.use('/auth', require('./src/routes/authRoutes'));
-app.use('/custom', prescriptionRoutes)
+app.use('/custom', prescriptionRoutes);
 app.use('/stats', require('./src/routes/statsRoutes'));
 app.use('/transaction', transactionRoutes);
 

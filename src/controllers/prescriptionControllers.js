@@ -4,7 +4,6 @@ const fs = require('fs');
 
 module.exports = {
   customUpload: async (req, res) => {
-    const { id } = req.params;
     const conn = await mysql.getConnection();
     const { custom } = req.files;
     let path = '/prescription';
@@ -14,7 +13,7 @@ module.exports = {
       sql = `insert into prescription set ? `;
       //? sekalian nambah edit prescription name yang unique, jadi admin gaperlu kasih prescription name, kasih kode yang hanya admin doang yang tau
       let dataInsert = {
-        user_id: id,
+        user_id: req.user.id,
         image: imagePath,
         status: 'initial',
       };
@@ -138,7 +137,7 @@ module.exports = {
       updateData = {
         status: nextStatus,
       };
-      sql = `update prescription set ? where id = ? `;
+      sql = `update prescription set ?, expiredAt = NOW() + INTERVAL 1 MINUTE where id = ? `;
       await conn.query(sql, [updateData, id]);
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
@@ -167,7 +166,11 @@ module.exports = {
     const { id } = req.params;
     const conn = await mysql.getConnection();
     try {
-      let sql = `select * from prescribed_medicine where prescription_id = ? ;`;
+      let sql = `SELECT user_id FROM prescription WHERE id = ?;`;
+      let [prescription] = await conn.query(sql, id);
+      if (prescription[0].user_id !== req.user.id) return res.sendStatus(403);
+
+      sql = `select * from prescribed_medicine where prescription_id = ?;`;
       let [result] = await conn.query(sql, id);
       conn.release();
       return res.status(200).send(result);
@@ -200,18 +203,66 @@ module.exports = {
       res.status(500).send({ message: error.message || 'server error' });
     }
   },
+  userConfirmDelivery: async (req, res) => {
+    const { id } = req.body;
+    let sql, conn;
+    try {
+      conn = await mysql.getConnection();
+      sql = `
+      SELECT user_id
+      FROM prescription
+      WHERE id = ?
+      AND status = 'otw';`;
+      const [prescription] = await conn.query(sql, id);
+      if (!prescription.length) {
+        conn.release();
+        return res.sendStatus(400);
+      }
+      if (prescription[0].user_id !== req.user.id) {
+        conn.release();
+        return res.sendStatus(403);
+      }
+
+      sql = `
+      UPDATE prescription
+      SET status = 'delivered'
+      WHERE id = ?;`;
+      await conn.query(sql, id);
+
+      conn.release();
+      return res.sendStatus(200);
+    } catch (error) {
+      conn.release();
+      console.log(error);
+      res.status(500).send({ message: error.message || 'server error' });
+    }
+  },
   getUserCustom: async (req, res) => {
-    const { id } = req.query;
+    let { page, limit, filter, search } = req.query;
+    const { id } = req.user;
     let sql;
     const conn = await mysql.getConnection();
     try {
-      sql = `select p.user_id, u.username, p.id, p.prescriptionName, p.image, p.paymentProof, p.status, p.profitRp, p.totalPriceRp
-            from prescription p
-            join user u
-            on p.user_id = u.id
-            where u.id = ? ; `;
+      let parameters = [id];
+      sql = `
+      SELECT id, image, expiredAt, paymentProof, prescriptionName, (profitRp + totalPriceRp) price, paymentProof, status, createdAt
+      FROM prescription
+      WHERE user_id = ?`;
+      if (filter && filter !== 'undefined') {
+        if (filter === 'failed')
+          sql += ` AND status IN ('imgRej', 'paymentRej', 'expired', 'paymentRej', 'rejected')`;
+        else {
+          sql += ' AND status = ?';
+          parameters.push(filter);
+        }
+      }
+      if (search) sql += ` AND prescriptionName LIKE '%${search}%'`;
+      sql += ' LIMIT ?, ?';
+      parameters.push(page === undefined ? 0 : parseInt(page - 1));
+      parameters.push(limit === undefined ? 10 : parseInt(limit));
+      sql += ';';
 
-      let [result] = await conn.query(sql, id);
+      let [result] = await conn.query(sql, parameters);
       conn.release();
       return res.status(200).send(result);
     } catch (error) {
@@ -252,25 +303,25 @@ module.exports = {
       return res.status(500).send({ message: error.message });
     }
   },
-  updateCostprofit : async (req,res) => {
+  updateCostprofit: async (req, res) => {
     const { cost, profit, id } = req.body;
-    const conn = await mysql.getConnection()
-    let sql, updateData
+    const conn = await mysql.getConnection();
+    let sql, updateData;
     try {
       updateData = {
-        totalPriceRp : cost,
-        profitRp : profit
-      }
-      sql = `update prescription set ? where id = ? `
-      await conn.query(sql, [updateData, id])
-      sql = `update prescription set expiredAt = NOW() + INTERVAL 2 HOUR where id = ? ; `
-      await conn.query(sql, id)
-      conn.release()
-      res.status(200).send({message: 'berhasil'})
+        totalPriceRp: cost,
+        profitRp: profit,
+      };
+      sql = `update prescription set ? where id = ? `;
+      await conn.query(sql, [updateData, id]);
+      // sql = `update prescription set expiredAt = NOW() + INTERVAL 2 HOUR where id = ? ; `
+      // await conn.query(sql, id)
+      conn.release();
+      res.status(200).send({ message: 'berhasil' });
     } catch (error) {
-      console.log(error)
-      conn.release()
-      res.status(500).send({message: error.message || 'server error'})
+      console.log(error);
+      conn.release();
+      res.status(500).send({ message: error.message || 'server error' });
     }
-  }
+  },
 };
