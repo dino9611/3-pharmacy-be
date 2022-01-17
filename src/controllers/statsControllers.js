@@ -187,12 +187,15 @@ exports.readSalesPieChart = async (req, res) => {
     FROM 3_pharmacy.prescription
     WHERE status IN('paymentAcc', 'processing', 'otw', 'delivered')
     AND expiredAt BETWEEN ? AND LAST_DAY(?)) prescriptionSales;`;
-    const [result] = await pool.query(sql, [
+    let [result] = await pool.query(sql, [
       yearMonthStart,
       yearMonthEnd,
       yearMonthStart,
       yearMonthEnd,
     ]);
+    result = result[0];
+    if (!result.orderSales) result.orderSales = 0;
+    if (!result.prescriptionSales) result.prescriptionSales = 0;
 
     res.status(200).send(result);
   } catch (error) {
@@ -201,4 +204,26 @@ exports.readSalesPieChart = async (req, res) => {
   }
 };
 
-exports.readTransactionsPieChart = async (req, res) => {};
+exports.readTransactionsPieChart = async (req, res) => {
+  let { yearMonthStart, yearMonthEnd } = req.query;
+  let sql;
+  try {
+    sql = `
+    SELECT status, COUNT(id) count
+    FROM prescription
+    WHERE expiredAt BETWEEN ? AND LAST_DAY(?)
+    GROUP BY status;`;
+    let [prescriptions] = await pool.query(sql, [yearMonthStart, yearMonthEnd]);
+    sql = `
+    SELECT status, COUNT(id) count
+    FROM 3_pharmacy.order
+    WHERE checkedOutAt BETWEEN ? AND LAST_DAY(?)
+    GROUP BY status;`;
+    let [orders] = await pool.query(sql, [yearMonthStart, yearMonthEnd]);
+
+    res.status(200).send({ prescriptions, orders });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'server error' });
+  }
+};

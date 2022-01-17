@@ -131,14 +131,13 @@ module.exports = {
   updateStatus: async (req, res) => {
     const { id, nextStatus } = req.body;
 
-    console.log(123);
     let conn, sql, updateData;
     try {
       conn = await mysql.getConnection();
       updateData = {
         status: nextStatus,
       };
-      sql = `update prescription set ? where id = ? `;
+      sql = `update prescription set ?, expiredAt = NOW() + INTERVAL 1 MINUTE where id = ? `;
       await conn.query(sql, [updateData, id]);
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
@@ -302,6 +301,23 @@ module.exports = {
         fs.unlinkSync('./public' + imagePath);
       }
       return res.status(500).send({ message: error.message });
+    }
+  },
+  updateCostprofit: async (req, res) => {
+    const { cost, profit, id } = req.body;
+    let conn, sql, updateData;
+    conn = await mysql.getConnection();
+    try {
+      updateData = {
+        totalPriceRp: cost,
+        profitRp: profit,
+      };
+      sql = `update prescription set ? where id = ? `;
+      await conn.query(sql, [updateData, id]);
+      res.status(200).send({ message: 'berhasil' });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: error.message || 'server error' });
     }
   },
 };

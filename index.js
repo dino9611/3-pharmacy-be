@@ -1,13 +1,7 @@
 require('dotenv').config();
-// require('./src/event_scheduler/checkPrescriptionPayment'); // * initialize event scheduler
+require('./src/event_scheduler/checkPrescriptionPayment'); // * initialize event scheduler
 
 const express = require('express');
-const {
-  authRoutes,
-  profileRoutes,
-  transactionRoutes,
-  prescriptionRoutes,
-} = require('./src/routes');
 const app = express();
 const PORT = process.env.PORT || 2003;
 const cors = require('cors');
@@ -15,6 +9,12 @@ const bearer = require('express-bearer-token');
 
 // ! body parse
 
+const {
+  authRoutes,
+  profileRoutes,
+  transactionRoutes,
+  prescriptionRoutes,
+} = require('./src/routes');
 app.use(
   cors({
     exposedHeaders: ['access-token'],
