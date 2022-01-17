@@ -68,6 +68,7 @@ CREATE TABLE `cart_item` (
 
 LOCK TABLES `cart_item` WRITE;
 /*!40000 ALTER TABLE `cart_item` DISABLE KEYS */;
+INSERT INTO `cart_item` VALUES (2,9,23000,1,'2022-01-18 01:24:00',1,7);
 /*!40000 ALTER TABLE `cart_item` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -94,7 +95,7 @@ CREATE TABLE `order` (
   KEY `fk_order_bank1_idx` (`bank_id`),
   CONSTRAINT `fk_order_bank1` FOREIGN KEY (`bank_id`) REFERENCES `bank` (`id`),
   CONSTRAINT `fk_order_user2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -103,7 +104,7 @@ CREATE TABLE `order` (
 
 LOCK TABLES `order` WRITE;
 /*!40000 ALTER TABLE `order` DISABLE KEYS */;
-INSERT INTO `order` VALUES (1,NULL,0,NULL,NULL,NULL,NULL,'cart',2,NULL);
+INSERT INTO `order` VALUES (1,NULL,0,NULL,NULL,NULL,NULL,'cart',2,NULL),(2,0,0,NULL,NULL,NULL,NULL,'cart',3,NULL);
 /*!40000 ALTER TABLE `order` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -225,7 +226,7 @@ CREATE TABLE `product` (
 
 LOCK TABLES `product` WRITE;
 /*!40000 ALTER TABLE `product` DISABLE KEYS */;
-INSERT INTO `product` VALUES (3,'Rhinos SR 10 Kapsul',290,20000,5,'/products/PROD1642417749031.jpg','Meredakan gejala yang berhubungan dengan rinitis alergi misalnya bersin, hidung tersumbat, rinore, pruritus & lakrimasi.',0,'2022-01-17 18:09:09','2022-01-17 11:09:09'),(4,'Tremenza Sirup 60 ml',126,10000,10,'/products/PROD1642418069349.jpg','Obat ini digunakan untuk mengatasi gejala-gejala flu seperti: bersin-bersin, hidung tersumbat, yang disertai batuk tidak berdahak.',0,'2022-01-17 18:14:29','2022-01-17 11:14:29'),(5,'Astria',32,12000,8,'/products/PROD1642418253006.jpg','untuk memelihara kesehatan',0,'2022-01-17 18:17:33','2022-01-17 11:17:49'),(6,'Tremenza 10 Tablet',250,20000,10,'/products/PROD1642418393641.jpg','Tremenza',0,'2022-01-17 18:19:53','2022-01-17 11:19:53'),(7,'Folavit 400 mcg 30 Tablet',9,23000,9,'/products/PROD1642418968673.jpg','untuk pertumbuhan janin',0,'2022-01-17 18:29:28','2022-01-17 11:30:16'),(8,'Topcort Cream 10 g',1500,22000,8,'/products/PROD1642419338394.jpg','meredakan inflamasi',0,'2022-01-17 18:35:38','2022-01-17 11:35:38'),(9,'Paracetamol 500 mg 10 Kaplet',1000,10000,13,'/products/PROD1642426694519.jpg','buat demam',0,'2022-01-17 20:38:14','2022-01-17 13:38:14');
+INSERT INTO `product` VALUES (3,'Rhinos SR 10 Kapsul',290,20000,5,'/products/PROD1642417749031.jpg','Meredakan gejala yang berhubungan dengan rinitis alergi misalnya bersin, hidung tersumbat, rinore, pruritus & lakrimasi.',0,'2022-01-17 18:09:09','2022-01-17 14:27:16'),(4,'Tremenza Sirup 60 ml',126,10000,10,'/products/PROD1642418069349.jpg','Obat ini digunakan untuk mengatasi gejala-gejala flu seperti: bersin-bersin, hidung tersumbat, yang disertai batuk tidak berdahak.',0,'2022-01-17 18:14:29','2022-01-17 11:14:29'),(5,'Astria',32,12000,8,'/products/PROD1642418253006.jpg','untuk memelihara kesehatan',0,'2022-01-17 18:17:33','2022-01-17 11:17:49'),(6,'Tremenza 10 Tablet',250,20000,10,'/products/PROD1642418393641.jpg','Tremenza',0,'2022-01-17 18:19:53','2022-01-17 11:19:53'),(7,'Folavit 400 mcg 30 Tablet',9,23000,9,'/products/PROD1642418968673.jpg','untuk pertumbuhan janin',0,'2022-01-17 18:29:28','2022-01-17 11:30:16'),(8,'Topcort Cream 10 g',1500,22000,8,'/products/PROD1642419338394.jpg','meredakan inflamasi',0,'2022-01-17 18:35:38','2022-01-17 11:35:38'),(9,'Paracetamol 500 mg 10 Kaplet',1000,10000,13,'/products/PROD1642426694519.jpg','buat demam',0,'2022-01-17 20:38:14','2022-01-17 13:38:14');
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -364,7 +365,7 @@ CREATE TABLE `raw_material_record` (
 
 LOCK TABLES `raw_material_record` WRITE;
 /*!40000 ALTER TABLE `raw_material_record` DISABLE KEYS */;
-INSERT INTO `raw_material_record` VALUES (17,2000000,'2022-01-17 18:01:15',2),(18,1000000,'2022-01-17 18:03:47',2),(17,-0,'2022-01-17 18:09:09',2),(18,-0,'2022-01-17 18:09:09',2),(17,-250,'2022-01-17 18:09:09',2),(18,-3000,'2022-01-17 18:09:09',2),(19,3600000,'2022-01-17 18:11:46',2),(18,-0,'2022-01-17 18:14:29',2),(19,-0,'2022-01-17 18:14:29',2),(18,-3000,'2022-01-17 18:14:29',2),(19,-150,'2022-01-17 18:14:29',2),(20,300000,'2022-01-17 18:15:54',2),(20,-0,'2022-01-17 18:17:33',2),(20,-128,'2022-01-17 18:17:33',2),(18,-0,'2022-01-17 18:19:53',2),(19,-0,'2022-01-17 18:19:53',2),(18,-6000,'2022-01-17 18:19:53',2),(19,-250,'2022-01-17 18:19:53',2),(21,180000,'2022-01-17 18:27:55',2),(21,-0,'2022-01-17 18:29:28',2),(21,-4.05,'2022-01-17 18:29:28',2),(22,400000,'2022-01-17 18:32:39',2),(22,-0,'2022-01-17 18:35:38',2),(22,-200,'2022-01-17 18:35:38',2),(23,3400000,'2022-01-17 20:35:54',2),(23,-0,'2022-01-17 20:38:14',2),(23,-6500,'2022-01-17 20:38:14',2);
+INSERT INTO `raw_material_record` VALUES (17,2000000,'2022-01-17 18:01:15',2),(18,1000000,'2022-01-17 18:03:47',2),(17,-0,'2022-01-17 18:09:09',2),(18,-0,'2022-01-17 18:09:09',2),(17,-250,'2022-01-17 18:09:09',2),(18,-3000,'2022-01-17 18:09:09',2),(19,3600000,'2022-01-17 18:11:46',2),(18,-0,'2022-01-17 18:14:29',2),(19,-0,'2022-01-17 18:14:29',2),(18,-3000,'2022-01-17 18:14:29',2),(19,-150,'2022-01-17 18:14:29',2),(20,300000,'2022-01-17 18:15:54',2),(20,-0,'2022-01-17 18:17:33',2),(20,-128,'2022-01-17 18:17:33',2),(18,-0,'2022-01-17 18:19:53',2),(19,-0,'2022-01-17 18:19:53',2),(18,-6000,'2022-01-17 18:19:53',2),(19,-250,'2022-01-17 18:19:53',2),(21,180000,'2022-01-17 18:27:55',2),(21,-0,'2022-01-17 18:29:28',2),(21,-4.05,'2022-01-17 18:29:28',2),(22,400000,'2022-01-17 18:32:39',2),(22,-0,'2022-01-17 18:35:38',2),(22,-200,'2022-01-17 18:35:38',2),(23,3400000,'2022-01-17 20:35:54',2),(23,-0,'2022-01-17 20:38:14',2),(23,-6500,'2022-01-17 20:38:14',2),(17,-82300,'2022-01-17 21:26:56',2),(18,-987600,'2022-01-17 21:26:56',2),(17,82300,'2022-01-17 21:27:16',2),(18,987600,'2022-01-17 21:27:16',2);
 /*!40000 ALTER TABLE `raw_material_record` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -419,7 +420,7 @@ CREATE TABLE `user` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username_UNIQUE` (`username`),
   UNIQUE KEY `email_UNIQUE` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -428,7 +429,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (2,'admin','admin@gmail.com','$2b$10$PlNf3pNHzuT0LrNuseMMqeyXsiNyjL.LAKYEy4dHjWZKFtXe3lCLC','admin',NULL,'admin',0,NULL,NULL,NULL,NULL,'2022-01-17 17:29:53','2022-01-17 10:29:53');
+INSERT INTO `user` VALUES (2,'admin','admin@gmail.com','$2b$10$PlNf3pNHzuT0LrNuseMMqeyXsiNyjL.LAKYEy4dHjWZKFtXe3lCLC','admin',NULL,'admin',0,NULL,NULL,NULL,NULL,'2022-01-17 17:29:53','2022-01-17 10:29:53'),(3,'user','user@gmail.com','$2b$10$mOy03Wiw6lqHFHvMybNpwO4mnVd3jLcCsTZoraMYy/twwlnUND.9e','user',NULL,'user',1,NULL,NULL,NULL,NULL,'2022-01-18 01:23:09','2022-01-17 18:23:09');
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -441,4 +442,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-01-17 21:01:14
+-- Dump completed on 2022-01-18  1:31:31
