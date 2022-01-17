@@ -99,7 +99,7 @@ exports.readRawMaterial = async (req, res) => {
 };
 
 exports.readRawMaterialRecord = async (req, res) => {
-  let { page, limit, filter, yearMonthStart, yearMonthEnd, search } = req.query;
+  let { page, limit, yearMonthStart, yearMonthEnd, search } = req.query;
   if (!(page && limit))
     return res.status(400).json({ message: 'invalid query' });
 
