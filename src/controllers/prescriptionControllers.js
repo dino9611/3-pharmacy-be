@@ -254,8 +254,8 @@ module.exports = {
   },
   updateCostprofit : async (req,res) => {
     const { cost, profit, id } = req.body;
-    let conn, sql, updateData
-    conn = await mysql.getConnection()
+    const conn = await mysql.getConnection()
+    let sql, updateData
     try {
       updateData = {
         totalPriceRp : cost,
@@ -263,9 +263,13 @@ module.exports = {
       }
       sql = `update prescription set ? where id = ? `
       await conn.query(sql, [updateData, id])
+      sql = `update prescription set expiredAt = NOW() + INTERVAL 2 HOUR where id = ? ; `
+      await conn.query(sql, id)
+      conn.release()
       res.status(200).send({message: 'berhasil'})
     } catch (error) {
       console.log(error)
+      conn.release()
       res.status(500).send({message: error.message || 'server error'})
     }
   }
