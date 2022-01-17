@@ -8,7 +8,6 @@ const cors = require('cors');
 const bearer = require('express-bearer-token');
 
 // ! body parse
-
 const {
   authRoutes,
   profileRoutes,

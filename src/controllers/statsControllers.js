@@ -221,6 +221,31 @@ exports.readTransactionsPieChart = async (req, res) => {
     GROUP BY status;`;
     let [orders] = await pool.query(sql, [yearMonthStart, yearMonthEnd]);
 
+    orders.forEach((el, i, arr) => {
+      switch (el.status) {
+        case 'otw':
+          arr[i].status = 'on delivery';
+          break;
+        case 'paymentAcc':
+          arr[i].status = 'payment accepted';
+          break;
+        default:
+          break;
+      }
+    });
+    prescriptions.forEach((el, i, arr) => {
+      switch (el.status) {
+        case 'otw':
+          arr[i].status = 'on delivery';
+          break;
+        case 'paymentAcc':
+          arr[i].status = 'payment accepted';
+          break;
+        default:
+          break;
+      }
+    });
+
     res.status(200).send({ prescriptions, orders });
   } catch (error) {
     console.log(error);
