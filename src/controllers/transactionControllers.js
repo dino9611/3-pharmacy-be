@@ -521,7 +521,8 @@ module.exports = {
             from 3_pharmacy.order
             join user u on order.user_id = u.id`;
       if (!filter) {
-        sql += ` where status <> 'cart'`;
+        // sql += ` where status <> 'cart'`;
+        sql += ` where status not in('cart', 'paymentRej', 'delivered')`;
       }
       if (filter === 'waitingpayment') {
         sql += ` where status = 'checkout' and paymentProof is null`;
@@ -661,22 +662,10 @@ module.exports = {
       let sql = `select 
             o.id, o.totalPrice, o.checkedOutAt,
             o.address, o.paymentProof, o.status, 
-            o.shippingCost, o.bank_id, o.user_id,
-            concat('[',
-                group_concat(
-                    concat(
-                        '{\"id\": \"', p.id, '\",',
-                        '\"productName\": \"', p.productName, '\",',
-                        '\"imagePath\": \"', p.imagePath, '\",',
-                        '\"productPriceRp\": \"', (p.productPriceRp + p.productProfitRp), '\",',
-                        '\"qty\": \"', ci.qty, '\"}'
-                    )
-                ),
-            ']') AS product_list
+            o.shippingCost, o.bank_id, o.user_id
             from 3_pharmacy.order o
-            join cart_item ci on o.id = ci.order_id
-            join product p on ci.product_id = p.id 
-            where o.user_id = ? and ci.isDeleted = 0`;
+            where o.user_id = ?`;
+
       if (!filter) {
         sql += ` and status <> 'cart'`;
       }
@@ -692,12 +681,19 @@ module.exports = {
           }
         }
         sql += ` group by o.id order by checkedOutAt desc limit ? offset ?`;
-        let [result] = await pool.query(sql, [user_id, 5, parseInt(offset)]);
-        let mapresult = result.map((val) => {
-          return { ...val, product_list: JSON.parse(val.product_list) };
-        });
+
+        const [orders] = await pool.query(sql, [user_id, 5, parseInt(offset)]);
+        for (let i = 0; i < orders.length; i++) {
+          sql = `
+        SELECT p.id, p.productName, p.imagePath, (p.productPriceRp + p.productProfitRp) productPriceRp, ci.qty
+        FROM cart_item ci
+        JOIN product p ON ci.product_id = p.id
+        WHERE order_id = ? AND !ci.isDeleted AND !p.isDeleted;`;
+          const [product_list] = await pool.query(sql, orders[i].id);
+          orders[i] = { ...orders[i], product_list };
+        }
         pool.release();
-        return res.status(200).send(mapresult);
+        return res.status(200).send(orders);
       }
       if (filter === 'checkout') {
         sql += ` and status = ? and paymentProof is not null`;
@@ -727,26 +723,41 @@ module.exports = {
           sql += ` and checkedOutAt >= (select date_sub(now(), interval 1 month))`;
         }
       }
+
       sql += ` group by o.id order by checkedOutAt desc limit ? offset ?`;
+
       if (filter) {
-        let [result] = await pool.query(sql, [
+        const [orders] = await pool.query(sql, [
           user_id,
           filter,
           5,
           parseInt(offset),
         ]);
-        let mapresult = result.map((val) => {
-          return { ...val, product_list: JSON.parse(val.product_list) };
-        });
+        for (let i = 0; i < orders.length; i++) {
+          sql = `
+        SELECT p.id, p.productName, p.imagePath, (p.productPriceRp + p.productProfitRp) productPriceRp, ci.qty
+        FROM cart_item ci
+        JOIN product p ON ci.product_id = p.id
+        WHERE order_id = ? AND !ci.isDeleted AND !p.isDeleted;`;
+          const [product_list] = await pool.query(sql, orders[i].id);
+          orders[i] = { ...orders[i], product_list };
+        }
         pool.release();
-        return res.status(200).send(mapresult);
+        return res.status(200).send(orders);
       }
-      let [result] = await pool.query(sql, [user_id, 5, parseInt(offset)]);
-      let mapresult = result.map((val) => {
-        return { ...val, product_list: JSON.parse(val.product_list) };
-      });
+
+      const [orders] = await pool.query(sql, [user_id, 5, parseInt(offset)]);
+      for (let i = 0; i < orders.length; i++) {
+        sql = `
+        SELECT p.id, p.productName, p.imagePath, (p.productPriceRp + p.productProfitRp) productPriceRp, ci.qty
+        FROM cart_item ci
+        JOIN product p ON ci.product_id = p.id
+        WHERE order_id = ? AND !ci.isDeleted AND !p.isDeleted;`;
+        const [product_list] = await pool.query(sql, orders[i].id);
+        orders[i] = { ...orders[i], product_list };
+      }
       pool.release();
-      return res.status(200).send(mapresult);
+      return res.status(200).send(orders);
     } catch (error) {
       pool.release();
       return res.status(500).send({ message: error.message });
@@ -924,7 +935,10 @@ module.exports = {
             where order_id = ? and ci.isDeleted = 0`;
       let [cek] = await pool.query(sql, order_id);
       let result = cek.map((val) => {
-        return { ...val, productPriceRp: val.productPriceRp + val.productProfitRp };
+        return {
+          ...val,
+          productPriceRp: val.productPriceRp + val.productProfitRp,
+        };
       });
       pool.release();
       return res.status(200).send(result);
