@@ -212,38 +212,20 @@ exports.readTransactionsPieChart = async (req, res) => {
     SELECT status, COUNT(id) count
     FROM prescription
     WHERE expiredAt BETWEEN ? AND LAST_DAY(?)
+    AND status IN('delivered', 'rejected', 'expired')
     GROUP BY status;`;
     let [prescriptions] = await pool.query(sql, [yearMonthStart, yearMonthEnd]);
     sql = `
     SELECT status, COUNT(id) count
     FROM 3_pharmacy.order
     WHERE checkedOutAt BETWEEN ? AND LAST_DAY(?)
+    AND status IN('delivered', 'paymentRej')
     GROUP BY status;`;
     let [orders] = await pool.query(sql, [yearMonthStart, yearMonthEnd]);
 
     orders.forEach((el, i, arr) => {
-      switch (el.status) {
-        case 'otw':
-          arr[i].status = 'on delivery';
-          break;
-        case 'paymentAcc':
-          arr[i].status = 'payment accepted';
-          break;
-        default:
-          break;
-      }
-    });
-    prescriptions.forEach((el, i, arr) => {
-      switch (el.status) {
-        case 'otw':
-          arr[i].status = 'on delivery';
-          break;
-        case 'paymentAcc':
-          arr[i].status = 'payment accepted';
-          break;
-        default:
-          break;
-      }
+      if (['paymentRej'].includes(el.status)) arr[i].status = 'rejected';
+      // else if ([].includes(el.status)) arr[i].status = 'on delivery';
     });
 
     res.status(200).send({ prescriptions, orders });

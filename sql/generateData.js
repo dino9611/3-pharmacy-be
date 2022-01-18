@@ -1,7 +1,7 @@
-const rand = (array) => Math.floor(Math.random() * array.length);
+const rand = (array) => array[Math.floor(Math.random() * array.length)];
 
 const generateOrder = (n) => {
-  const status = ['paymentAcc', 'paymentRej'];
+  const status = ['delivered', 'paymentRej'];
   let out =
     'INSERT INTO 3_pharmacy.order(totalPrice, checkedOutAt, status, user_id, profitRp) VALUES';
   for (let i = 0; i < status.length; i++) {
@@ -17,7 +17,7 @@ const generateOrder = (n) => {
 };
 
 const generatePrescription = (n) => {
-  const status = ['paymentAcc', 'paymentRej'];
+  const status = ['delivered', 'rejected'];
   let out =
     'INSERT INTO 3_pharmacy.prescription(prescriptionName, image, expiredAt, totalPriceRp, profitRp, status, user_id) VALUES';
   for (let i = 0; i < status.length; i++) {
@@ -34,3 +34,6 @@ const generatePrescription = (n) => {
 
 // console.log(generatePrescription(400));
 // console.log(generateOrder(400));
+
+const a = [1, 5, 82];
+console.log(rand(a));
