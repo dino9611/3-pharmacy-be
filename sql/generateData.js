@@ -17,7 +17,7 @@ const generateOrder = (n) => {
 };
 
 const generatePrescription = (n) => {
-  const status = ['delivered', 'rejected'];
+  const status = ['delivered', 'rejected', 'expired'];
   let out =
     'INSERT INTO 3_pharmacy.prescription(prescriptionName, image, expiredAt, totalPriceRp, profitRp, status, user_id) VALUES';
   for (let i = 0; i < status.length; i++) {
@@ -34,6 +34,3 @@ const generatePrescription = (n) => {
 
 // console.log(generatePrescription(400));
 // console.log(generateOrder(400));
-
-const a = [1, 5, 82];
-console.log(rand(a));
