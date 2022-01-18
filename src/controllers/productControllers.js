@@ -346,13 +346,13 @@ exports.getProductsPagination = async (req, res) => {
 
       // jika ada query search dan kategori dan filter
       if (filter === 'lowest') {
-        sql += ' order by p.productPriceRp asc';
+        sql += ' order by productPriceRp asc';
       }
       if (filter === 'highest') {
-        sql += ' order by p.productPriceRp desc';
+        sql += ' order by productPriceRp desc';
       }
       if (filter === 'default') {
-        sql += ' order by p.id asc';
+        sql += ' order by p.createdAt desc';
       }
       sql += `) as sn where sn.productName like '${search}%' and sn.isDeleted = 0`;
       if (parseInt(kategori)) {
@@ -381,10 +381,10 @@ exports.getProductsPagination = async (req, res) => {
 
     // jika ada query filter
     if (filter === 'lowest') {
-      sql += ' order by p.productPriceRp asc';
+      sql += ' order by productPriceRp asc';
     }
     if (filter === 'highest') {
-      sql += ' order by p.productPriceRp desc';
+      sql += ' order by productPriceRp desc';
     }
     if (filter === 'default') {
       sql += ' order by p.createdAt desc';
