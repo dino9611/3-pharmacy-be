@@ -19,12 +19,12 @@ exports.readRevenue = async (req, res) => {
         (
         SELECT SUM(totalPrice) cost, SUM(profitRp) profit
         FROM 3_pharmacy.order
-        WHERE checkedOutAt BETWEEN (NOW() - INTERVAL 2 DAY) AND (NOW() - INTERVAL 1 DAY)
+        WHERE checkedOutAt BETWEEN (NOW() - INTERVAL 2*7 DAY) AND (NOW() - INTERVAL 1*7 DAY)
         ${potentialRevenueCondition}
         UNION ALL
         SELECT SUM(totalPriceRp) cost, SUM(profitRp) profit
         FROM prescription
-        WHERE expiredAt BETWEEN (NOW() - INTERVAL 2 DAY) AND (NOW() - INTERVAL 1 DAY)
+        WHERE expiredAt BETWEEN (NOW() - INTERVAL 2*7 DAY) AND (NOW() - INTERVAL 1*7 DAY)
         ${potentialRevenueCondition}
         ) unionResult;`;
 
@@ -33,12 +33,12 @@ exports.readRevenue = async (req, res) => {
         (
         SELECT SUM(totalPrice) cost, SUM(profitRp) profit
         FROM 3_pharmacy.order
-        WHERE checkedOutAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()
+        WHERE checkedOutAt BETWEEN NOW() - INTERVAL 1*7 DAY AND NOW()
         ${potentialRevenueCondition}
         UNION ALL
         SELECT SUM(totalPriceRp) cost, SUM(profitRp) profit
         FROM 3_pharmacy.prescription
-        WHERE expiredAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()
+        WHERE expiredAt BETWEEN NOW() - INTERVAL 1*7 DAY AND NOW()
         ${potentialRevenueCondition}
         ) unionResult;`;
 
@@ -131,11 +131,11 @@ exports.readRecentNewUsers = async (req, res) => {
     prev = `
     SELECT COUNT(id) count
     FROM 3_pharmacy.user
-    WHERE createdAt BETWEEN (NOW() - INTERVAL 2 DAY) AND (NOW() - INTERVAL 1 DAY);`;
+    WHERE createdAt BETWEEN (NOW() - INTERVAL 2*7 DAY) AND (NOW() - INTERVAL 1*7 DAY);`;
     curr = `
     SELECT COUNT(id) count
     FROM 3_pharmacy.user
-    WHERE createdAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()`;
+    WHERE createdAt BETWEEN NOW() - INTERVAL 1*7 DAY AND NOW()`;
     const [prevResult] = await pool.query(prev);
     const [currResult] = await pool.query(curr);
 
@@ -156,11 +156,11 @@ exports.readRecentCartedItems = async (req, res) => {
     prev = `
     SELECT COUNT(*) count
     FROM cart_item
-    WHERE createdAt BETWEEN (NOW() - INTERVAL 2 DAY) AND (NOW() - INTERVAL 1 DAY);`;
+    WHERE createdAt BETWEEN (NOW() - INTERVAL 2*7 DAY) AND (NOW() - INTERVAL 1*7 DAY);`;
     curr = `
     SELECT COUNT(*) count
     FROM cart_item
-    WHERE createdAt BETWEEN NOW() - INTERVAL 1 DAY AND NOW()`;
+    WHERE createdAt BETWEEN NOW() - INTERVAL 1*7 DAY AND NOW()`;
     const [prevResult] = await pool.query(prev);
     const [currResult] = await pool.query(curr);
 

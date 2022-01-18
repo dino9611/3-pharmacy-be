@@ -7,6 +7,7 @@ const job = schedule.scheduleJob('*/1 * * * *', async (fireDate) => {
   let sql, conn;
   try {
     conn = await pool.getConnection();
+    await conn.beginTransaction();
 
     // * loop through prescription
     sql = `
@@ -41,8 +42,10 @@ const job = schedule.scheduleJob('*/1 * * * *', async (fireDate) => {
       await conn.query(sql, _prescription_id);
     }
 
+    await conn.commit();
     conn.release();
   } catch (error) {
+    await conn.rollback();
     conn.release();
     console.log(error);
   }
