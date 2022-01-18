@@ -115,6 +115,7 @@ exports.readRawMaterialRecord = async (req, res) => {
     WHERE DATE(datetime) = DATE(?)
     AND ${search || 'TRUE'}
     GROUP BY A.id
+    HAVING inventoryChange != 0
     LIMIT ?, ?`;
 
     limit = parseInt(limit);
