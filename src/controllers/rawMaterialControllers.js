@@ -99,7 +99,7 @@ exports.readRawMaterial = async (req, res) => {
 };
 
 exports.readRawMaterialRecord = async (req, res) => {
-  let { page, limit, yearMonthStart, yearMonthEnd, search } = req.query;
+  let { page, limit, date, search } = req.query;
   if (!(page && limit))
     return res.status(400).json({ message: 'invalid query' });
 
@@ -112,19 +112,14 @@ exports.readRawMaterialRecord = async (req, res) => {
     sql = `SELECT materialName, SUM(inventoryChange) inventoryChange, unitPerBottle, unit
     FROM raw_material A
     JOIN raw_material_record B ON A.id = B.raw_material_id
-    WHERE datetime BETWEEN ? AND LAST_DAY(?)
+    WHERE DATE(datetime) = DATE(?)
     AND ${search || 'TRUE'}
     GROUP BY A.id
     LIMIT ?, ?`;
 
     limit = parseInt(limit);
     let offset = (parseInt(page) - 1) * limit;
-    const [result] = await conn.query(sql, [
-      yearMonthStart,
-      yearMonthEnd,
-      offset,
-      limit,
-    ]);
+    const [result] = await conn.query(sql, [date, offset, limit]);
 
     conn.release();
     res.status(200).json({ result });
