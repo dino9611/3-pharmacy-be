@@ -816,6 +816,7 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
+                where order.status not in('cart', 'paymentRej', 'delivered')
                 order by checkedOutAt desc
                 limit ?`;
         let [result] = await pool.query(sql, limit);
@@ -836,8 +837,10 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
-                order by checkedOutAt desc`;
-        let [result] = await pool.query(sql);
+                where order.status not in('cart', 'paymentRej', 'delivered')
+                order by checkedOutAt desc
+                limit ?`;
+        let [result] = await pool.query(sql, limit);
         pool.release();
         return res.status(200).send(result);
       }
@@ -855,6 +858,7 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
+                where order.status not in('cart', 'paymentRej', 'delivered')
                 order by checkedOutAt desc
                 limit ?`;
         let [result] = await pool.query(sql, limit);
@@ -875,6 +879,7 @@ module.exports = {
                 order.status, order.shippingCost, order.bank_id, u.username
                 from 3_pharmacy.order
                 join user u on order.user_id = u.id
+                where order.status not in('cart', 'paymentRej', 'delivered')
                 order by checkedOutAt desc
                 limit ?`;
         let [result] = await pool.query(sql, limit);
