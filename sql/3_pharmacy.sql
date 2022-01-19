@@ -286,38 +286,6 @@ LOCK TABLES `product` WRITE;
 INSERT INTO `product` VALUES (3,'Rhinos SR 10 Kapsul',290,20000,5,'/products/PROD1642417749031.jpg','Meredakan gejala yang berhubungan dengan rinitis alergi misalnya bersin, hidung tersumbat, rinore, pruritus & lakrimasi.',0,'2022-01-17 18:09:09','2022-01-17 14:27:16'),(4,'Tremenza Sirup 60 ml',126,10000,10,'/products/PROD1642418069349.jpg','Obat ini digunakan untuk mengatasi gejala-gejala flu seperti: bersin-bersin, hidung tersumbat, yang disertai batuk tidak berdahak.',0,'2022-01-17 18:14:29','2022-01-17 11:14:29'),(5,'Astria',32,12000,7,'/products/PROD1642418253006.jpg','untuk memelihara kesehatan',0,'2022-01-17 18:17:33','2022-01-18 14:05:03'),(6,'Tremenza 10 Tablet',250,20000,10,'/products/PROD1642418393641.jpg','Tremenza',0,'2022-01-17 18:19:53','2022-01-17 11:19:53'),(7,'Folavit',20,23000,8,'/products/PROD1642418968673.jpg','untuk pertumbuhan janin',0,'2022-01-17 18:29:28','2022-01-18 14:05:03'),(8,'Topcort Cream 10 g',1500,22000,8,'/products/PROD1642419338394.jpg','meredakan inflamasi',0,'2022-01-17 18:35:38','2022-01-17 11:35:38'),(9,'Paracetamol 500 mg 10 Kaplet',1000,10000,13,'/products/PROD1642426694519.jpg','buat demam',0,'2022-01-17 20:38:14','2022-01-17 13:38:14'),(10,'Tempra Forte Sirup 60 ml',6000,1000,10,'/products/PROD1642474813940.jpg','TEMPRA FORTE merupakan obat penurun demam yang mengandung Paracetamol 250 mg tiap 5 ml sirup.\n',0,'2022-01-18 10:00:13','2022-01-18 03:00:13'),(11,'Praxion Sirup 60 ml',1200,1500,10,'/products/PROD1642474940843.jpg','PRAXION SIRUP merupakan obat yang mengandung Paracetamol yang berfungsi sebagai analgesik dan antipiretik.',0,'2022-01-18 10:02:20','2022-01-18 03:02:20'),(12,'Cefixime Sirup 30 ml',6000,2000,8,'/products/PROD1642475738832.jpg','cefixime merupakan antibiotik yang memiliki spektrum luas',0,'2022-01-18 10:15:38','2022-01-18 14:05:03'),(13,'Lostacef 500 mg 10 Kapsul',2600,1000,14,'/products/PROD1642476403730.jpg','Lostacef merupakan antibiotik yang mengandung cefadroxil. cefadroxil merupakan antibiotika golongan cefalosporin',0,'2022-01-18 10:26:43','2022-01-18 14:05:03'),(14,'Alloris 10 mg 10 Tablet',10,2000,19,'/products/PROD1642477454126.jpg','ALLORIS TABLET merupakan obat dengan kandungan Loratadine dalam bentuk tablet. ',0,'2022-01-18 10:44:14','2022-01-18 14:05:03'),(15,'Thrombo Aspilets 80 mg 30 Tablet',400,2000,24,'/products/PROD1642492613818.jpg','memiliki manfaat sebagai anti-platelet dengan cara menghambat pembentukan trombus pada sirkulasi arteri.',0,'2022-01-18 14:56:53','2022-01-18 07:56:53'),(16,'Ascardia 80 mg 10 Tablet',400,2000,24,'/products/PROD1642493073682.jpg','memiliki manfaat sebagai anti-platelet dengan cara menghambat pembentukan trombus pada sirkulasi arteri.',0,'2022-01-18 15:04:33','2022-01-18 14:05:03'),(17,'Atorvastatin 20 mg 10 Tablet',200,1500,24,'/products/PROD1642493201897.jpg','Obat ini digunakan sebagai tambahan diet untuk menurunkan peningkatan kolesterol total, kolesterol LDL, apo-B & trigliserida pada pasien \n',0,'2022-01-18 15:06:41','2022-01-18 14:05:03'),(18,'Neurobion 10 Tablet',2800,2000,19,'/products/PROD1642493833002.jpg','NEUROBION merupakan vitamin neurotropik dengan kandungan Vitamin B1, Vitamin B6, Vitamin B12, yang penting untuk kesehatan fungsi saraf.',0,'2022-01-18 15:17:13','2022-01-18 14:05:03');
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `product_AFTER_INSERT` AFTER INSERT ON `product` FOR EACH ROW BEGIN
-
-DECLARE _tableName VARCHAR(7) DEFAULT 'product';
-DECLARE _length INT DEFAULT (SELECT COUNT(id) FROM product);
-
-IF EXISTS(SELECT id FROM table_length WHERE tableName = _tableName) THEN
-	-- UPDATE table_length
-	-- SET length = length + 1
-	-- WHERE tableName = _tableName;
-    UPDATE table_length
-    SET length = _length
-    WHERE tableName = _tableName;
-ELSE
-	INSERT INTO table_length(tableName, length)
-    VALUES(_tableName, _length);
-END IF;
-
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `product_category`
@@ -538,32 +506,6 @@ LOCK TABLES `raw_material_record` WRITE;
 /*!40000 ALTER TABLE `raw_material_record` DISABLE KEYS */;
 INSERT INTO `raw_material_record` VALUES (17,2000000,'2022-01-17 18:01:15',2),(18,1000000,'2022-01-17 18:03:47',2),(17,0,'2022-01-17 18:09:09',2),(18,0,'2022-01-17 18:09:09',2),(17,-250,'2022-01-17 18:09:09',2),(18,-3000,'2022-01-17 18:09:09',2),(19,3600000,'2022-01-17 18:11:46',2),(18,0,'2022-01-17 18:14:29',2),(19,0,'2022-01-17 18:14:29',2),(18,-3000,'2022-01-17 18:14:29',2),(19,-150,'2022-01-17 18:14:29',2),(20,300000,'2022-01-17 18:15:54',2),(20,0,'2022-01-17 18:17:33',2),(20,-128,'2022-01-17 18:17:33',2),(18,0,'2022-01-17 18:19:53',2),(19,0,'2022-01-17 18:19:53',2),(18,-6000,'2022-01-17 18:19:53',2),(19,-250,'2022-01-17 18:19:53',2),(21,180000,'2022-01-17 18:27:55',2),(21,0,'2022-01-17 18:29:28',2),(21,-4.05,'2022-01-17 18:29:28',2),(22,400000,'2022-01-17 18:32:39',2),(22,0,'2022-01-17 18:35:38',2),(22,-200,'2022-01-17 18:35:38',2),(23,3400000,'2022-01-17 20:35:54',2),(23,0,'2022-01-17 20:38:14',2),(23,-6500,'2022-01-17 20:38:14',2),(17,-82300,'2022-01-17 21:26:56',2),(18,-987600,'2022-01-17 21:26:56',2),(17,82300,'2022-01-17 21:27:16',2),(18,987600,'2022-01-17 21:27:16',2),(23,0,'2022-01-18 10:00:13',2),(23,-30000,'2022-01-18 10:00:13',2),(23,0,'2022-01-18 10:02:20',2),(23,-6000,'2022-01-18 10:02:20',2),(24,4500,'2022-01-18 10:10:23',2),(21,-4.95,'2022-01-18 10:12:51',2),(24,0,'2022-01-18 10:15:38',2),(24,-4500,'2022-01-18 10:15:38',2),(24,9,'2022-01-18 10:17:43',2),(24,-9,'2022-01-18 10:18:28',2),(24,300000000,'2022-01-18 10:20:17',2),(24,60000000,'2022-01-18 10:20:28',2),(24,3000000,'2022-01-18 10:20:35',2),(24,-22500,'2022-01-18 10:21:20',2),(25,120000000,'2022-01-18 10:23:48',2),(25,0,'2022-01-18 10:26:43',2),(25,-7500,'2022-01-18 10:26:43',2),(17,0,'2022-01-18 10:44:14',2),(17,-200,'2022-01-18 10:44:14',2),(26,16000000,'2022-01-18 14:55:09',2),(26,0,'2022-01-18 14:56:53',2),(26,-1920,'2022-01-18 14:56:53',2),(27,175000000,'2022-01-18 15:01:52',2),(26,0,'2022-01-18 15:04:33',2),(26,-2000,'2022-01-18 15:04:33',2),(27,0,'2022-01-18 15:06:41',2),(27,-500,'2022-01-18 15:06:41',2),(28,3000000,'2022-01-18 15:12:00',2),(29,40000000,'2022-01-18 15:13:04',2),(30,4000000,'2022-01-18 15:14:00',2),(28,0,'2022-01-18 15:17:13',2),(29,0,'2022-01-18 15:17:13',2),(30,0,'2022-01-18 15:17:13',2),(28,-2000,'2022-01-18 15:17:13',2),(29,-4000,'2022-01-18 15:17:13',2),(30,-4000,'2022-01-18 15:17:13',2);
 /*!40000 ALTER TABLE `raw_material_record` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `table_length`
---
-
-DROP TABLE IF EXISTS `table_length`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `table_length` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `tableName` varchar(45) NOT NULL,
-  `length` int unsigned NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `tableName_UNIQUE` (`tableName`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `table_length`
---
-
-LOCK TABLES `table_length` WRITE;
-/*!40000 ALTER TABLE `table_length` DISABLE KEYS */;
-INSERT INTO `table_length` VALUES (1,'product',16);
-/*!40000 ALTER TABLE `table_length` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1211,4 +1153,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-01-18 21:29:02
+-- Dump completed on 2022-01-19 14:52:57
