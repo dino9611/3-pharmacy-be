@@ -318,5 +318,40 @@ module.exports = {
       pool.release()
       return res.status(500).send({ message: error.message })
     }
+  },
+  changeProfilePass: async (req, res) => {
+    const { currentPass, newPass, confirmNewPass } = req.body
+    const { id } = req.params
+    const pool = await mysql.getConnection()
+    try {
+      let sql = `select * from user where id = ?`
+      let [user] = await pool.query(sql, id)
+      if (!user.length) {
+        pool.release()
+        throw { message: 'User is not found' }
+      }
+      const match = await bcrypt.compare(currentPass, user[0].password);
+      if (!match) {
+        pool.release()
+        throw { message: 'input does not match current password' }
+      }
+      if (newPass != confirmNewPass) {
+        pool.release()
+        throw { message: 'password does not match' }
+      }
+      const hashPassword = bcrypt.hashSync(newPass, saltRounds)
+      let updatePass = {
+        password: hashPassword
+      }
+      sql = `update user set ? where id = ?`
+      await pool.query(sql, [updatePass, id])
+      sql = `select * from user where id = ?`
+      let [result] = await pool.query(sql, id)
+      pool.release()
+      return res.status(200).send(result)
+    } catch (error) {
+      pool.release()
+      return res.status(500).send({ message: error.message })
+    }
   }
 };
