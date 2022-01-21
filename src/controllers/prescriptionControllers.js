@@ -137,7 +137,7 @@ module.exports = {
       updateData = {
         status: nextStatus,
       };
-      sql = `update prescription set ?, expiredAt = NOW() + INTERVAL 2 HOUR where id = ? `;
+      sql = `update prescription set ? where id = ? `;
       await conn.query(sql, [updateData, id]);
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
@@ -166,11 +166,11 @@ module.exports = {
     const { id } = req.params;
     const conn = await mysql.getConnection();
     try {
-      let sql = `SELECT user_id FROM prescription WHERE id = ?;`;
-      let [prescription] = await conn.query(sql, id);
-      if (prescription[0].user_id !== req.user.id) return res.sendStatus(403);
+      // let sql = `SELECT user_id FROM prescription WHERE id = ?;`;
+      // let [prescription] = await conn.query(sql, id);
+      // if (prescription[0].user_id !== req.user.id) return res.sendStatus(403);
 
-      sql = `select * from prescribed_medicine where prescription_id = ?;`;
+      let sql = `select * from prescribed_medicine where prescription_id = ?;`;
       let [result] = await conn.query(sql, id);
       conn.release();
       return res.status(200).send(result);
@@ -312,10 +312,8 @@ module.exports = {
         totalPriceRp: cost,
         profitRp: profit,
       };
-      sql = `update prescription set ? where id = ? `;
+      sql = `update prescription set ?, expiredAt = NOW() + INTERVAL 2 HOUR where id = ? `;
       await conn.query(sql, [updateData, id]);
-      // sql = `update prescription set expiredAt = NOW() + INTERVAL 2 HOUR where id = ? ; `
-      // await conn.query(sql, id)
       conn.release();
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {

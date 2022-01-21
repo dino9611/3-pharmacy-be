@@ -887,15 +887,25 @@ module.exports = {
         return res.status(200).send(result);
       }
 
-      // jika type-nya otw
-      if (type === 'delivered') {
-        // update status berdasarkan order_id
-        sql = `update 3_pharmacy.order set ? where id = ?`;
-        const dataUpdate = { status: 'delivered' };
-        await pool.query(sql, [dataUpdate, order_id]);
+    } catch (error) {
+      pool.release();
+      return res.status(500).send({ message: error.message });
+    }
+  },
+  confirmProductDelivery: async (req, res) => {
+    const { order_id } = req.params;
+    const { limit } = req.body;
+    let conn, sql;
+    try {
+      const conn = await mysql.getConnection();
+      const user_id = req.user.id;
 
-        // get semua data order
-        sql = `select 
+      sql = `update 3_pharmacy.order set ? where id = ? and user_id ?;`;
+      const dataUpdate = { status: 'delivered' };
+      await conn.query(sql, [dataUpdate, order_id, user_id]);
+
+      // get semua data order
+      sql = `select 
                 order.id, order.totalPrice, order.checkedOutAt, order.address, order.paymentProof,
                 order.status, order.shippingCost, order.bank_id, u.id, u.username
                 from 3_pharmacy.order
@@ -903,12 +913,11 @@ module.exports = {
                 where u.id = ?
                 order by checkedOutAt desc
                 limit ?`;
-        let [result] = await pool.query(sql, [user_id, 5]);
-        pool.release();
-        return res.status(200).send(result);
-      }
+      let [result] = await conn.query(sql, [user_id, limit]);
+      conn.release();
+      return res.status(200).send(result);
     } catch (error) {
-      pool.release();
+      conn.release();
       return res.status(500).send({ message: error.message });
     }
   },
