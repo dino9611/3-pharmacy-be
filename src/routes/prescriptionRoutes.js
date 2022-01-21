@@ -13,6 +13,7 @@ const {
   paymentProof,
   userConfirmDelivery,
   updateCostprofit,
+  prescriptionLength
 } = prescriptionControllers;
 const { verifyAccessToken } = require('../helpers/verifyToken');
 const { verifyAdmin } = require('../middlewares/verifyAdmin');
@@ -31,20 +32,22 @@ router.use(verifyAccessToken);
 
 // ! admin/user
 router.get('/details/:id', getDetails);
+router.get('/prescriptionlength', prescriptionLength);
+router.patch('/nextstatus', updateStatus);
 
 //! route user
 router.get('/usercustom', verifyUser, getUserCustom);
 router.post('/confirm_delivery', verifyUser, userConfirmDelivery);
-router.patch('/update/payment/:id', verifyUser, paymentUploader, paymentProof);
 router.post('/upload', verifyUser, customUploader, customUpload);
+router.patch('/update/payment/:id', verifyUser, paymentUploader, paymentProof);
 
 router.use(verifyAdmin);
 
 //! Route Admin
 router.get('/', getDataCustom);
+
 router.get('/medicine/:id', getMedicineName);
 router.post('/create', verifyAccessToken, verifyAdmin, createPrescription);
-router.patch('/nextstatus', updateStatus);
 router.patch('/custname', updatePrescriptionName);
 router.patch('/costprofit', updateCostprofit);
 

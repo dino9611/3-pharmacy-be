@@ -30,7 +30,7 @@ module.exports = {
     }
   },
   getDataCustom: async (req, res) => {
-    const { status } = req.query;
+    const { status, rowsPerPage, offset } = req.query;
     let sql;
     let querySql = '';
     const conn = await mysql.getConnection();
@@ -42,9 +42,8 @@ module.exports = {
             select p.user_id,u.username,p.id, p.prescriptionName, p.image, p.paymentProof, p.status 
             from prescription p 
             join user u 
-            on p.user_id = u.id where true ${querySql} `;
-
-      let [result] = await conn.query(sql);
+            on p.user_id = u.id where true ${querySql} limit ?  offset ? ;`;
+      let [result] = await conn.query(sql, [parseInt(rowsPerPage), parseInt(offset)]);
       conn.release();
       return res.status(200).send(result);
     } catch (error) {
@@ -61,27 +60,6 @@ module.exports = {
     try {
       await conn.beginTransaction();
       console.log(id);
-      // sql = 'select id from prescription where prescriptionName = ? '
-      // const [dataPrescript] = await conn.query(sql, [prescriptionName])
-      // if(!dataPrescript.length){
-
-      // }
-      //! ini untuk mengisi tabel prescription agar lengkap DIPINDAHIN NIH KE NEXT ENDPOINT
-      // updateData = {
-      //     prescriptionName,
-      //     status
-      // }
-      // sql = `update prescription set ? where id = ? `
-      // await conn.query(sql, [updateData, id])
-      // sql = `select * from prescribed_medicine where prescription_id = ?`
-      // let [existData] = await conn.query(sql, id)
-      // if (existData[0].prescription_id){
-      //     sql = `update prescribed_medicine set ? `
-      //     updateData= {
-      //         pres
-      //     }
-      // }
-
       //? ini initial input untuk tabel prescribed medicine
       sql = `insert into prescribed_medicine set ? `;
       insertData = {
@@ -108,15 +86,6 @@ module.exports = {
       //? set QTY
       sql = 'CALL handle_update_qty(?, ?, ?)';
       await conn.query(sql, [productId, qty, admin_id]);
-
-      //? get ulang
-      // sql = `
-      // select p.user_id,u.username,p.id, p.prescriptionName, p.image, p.paymentProof, p.status
-      // from prescription p
-      // join user u
-      // on p.user_id = u.id `
-      // let [results] = await conn.query(sql)
-
       console.log('berhasil');
       await conn.commit();
       conn.release();
@@ -319,6 +288,24 @@ module.exports = {
     } catch (error) {
       console.log(error);
       conn.release();
+      res.status(500).send({ message: error.message || 'server error' });
+    }
+  },
+  prescriptionLength: async (req,res) => {
+    const { status } = req.query;
+    let querySql = '';
+    let conn = await mysql.getConnection()
+    try {
+      if (status){
+        querySql += `and status = ${mysql.escape(status)}`
+      }
+      let sql  = `select count(*) prescription_length from prescription where true ${querySql} ` 
+      let [results] = await conn.query(sql)
+      conn.release()
+      return res.status(200).send(results)
+    } catch (error) {
+      conn.release();
+      console.log(error);
       res.status(500).send({ message: error.message || 'server error' });
     }
   },
