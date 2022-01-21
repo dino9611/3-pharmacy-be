@@ -5,6 +5,8 @@ const handlebars = require('handlebars');
 const path = require('path');
 const fs = require('fs');
 
+const { FRONTEND_URL } = process.env;
+
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 //!STDTTL Pas selesai nanti jangan lupa diganti
@@ -64,7 +66,11 @@ module.exports = {
       let filepath = path.resolve(__dirname, '../template/emailVerify.html');
       let htmlString = fs.readFileSync(filepath, 'utf-8');
       const template = handlebars.compile(htmlString);
-      const htmlToEmail = template({ name: username, token: emailToken });
+      const htmlToEmail = template({
+        username,
+        FRONTEND_URL,
+        token: emailToken,
+      });
       transporter.sendMail({
         from: `Tokobat <${process.env.EMAIL_USER}>`,
         to: email,
@@ -142,7 +148,11 @@ module.exports = {
       let filepath = path.resolve(__dirname, '../template/emailVerify.html');
       let htmlString = fs.readFileSync(filepath, 'utf-8');
       var template = handlebars.compile(htmlString);
-      const htmlToEmail = template({ name: username, token: emailToken });
+      const htmlToEmail = template({
+        name: username,
+        FRONTEND_URL,
+        token: emailToken,
+      });
       await transporter.sendMail({
         from: `Tokobat <${process.env.EMAIL_USER}>`,
         to: dataUser[0].email,
@@ -185,6 +195,7 @@ module.exports = {
       var template = handlebars.compile(htmlString);
       const htmlToEmail = template({
         name: userData[0].username,
+        FRONTEND_URL,
         token: tokenEmailPassword,
       });
       // console.log(htmlToEmail)
@@ -281,77 +292,81 @@ module.exports = {
     }
   },
   userLength: async (req, res) => {
-    const { username } = req.query
-    const pool = await mysql.getConnection()
+    const { username } = req.query;
+    const pool = await mysql.getConnection();
     try {
-      let sql = `select count(*) user_length from user where role = ? and username like '${username}%'`
-      let [result] = await pool.query(sql, 'user')
-      pool.release()
-      return res.status(200).send(result)
+      let sql = `select count(*) user_length from user where role = ? and username like '${username}%'`;
+      let [result] = await pool.query(sql, 'user');
+      pool.release();
+      return res.status(200).send(result);
     } catch (error) {
-      pool.release()
-      return res.status(500).send({ message: error.message })
+      pool.release();
+      return res.status(500).send({ message: error.message });
     }
   },
   userList: async (req, res) => {
-    const { username, limit, offset } = req.query
-    const pool = await mysql.getConnection()
+    const { username, limit, offset } = req.query;
+    const pool = await mysql.getConnection();
     try {
-      let sql = `select * from user where role = ? and username like '${username}%' limit ? offset ?`
-      let [result] = await pool.query(sql, ['user', parseInt(limit), parseInt(offset)])
-      pool.release()
-      return res.status(200).send(result)
+      let sql = `select * from user where role = ? and username like '${username}%' limit ? offset ?`;
+      let [result] = await pool.query(sql, [
+        'user',
+        parseInt(limit),
+        parseInt(offset),
+      ]);
+      pool.release();
+      return res.status(200).send(result);
     } catch (error) {
-      pool.release()
-      return res.status(500).send({ message: error.message })
+      pool.release();
+      return res.status(500).send({ message: error.message });
     }
   },
   userDetail: async (req, res) => {
-    const { id } = req.params
-    const pool = await mysql.getConnection()
+    const { id } = req.params;
+    const pool = await mysql.getConnection();
     try {
-      let sql = `select * from user where id = ? and role = ?`
-      let [result] = await pool.query(sql, [id, 'user'])
-      pool.release()
-      return res.status(200).send(result)
+      let sql = `select * from user where id = ? and role = ?`;
+      let [result] = await pool.query(sql, [id, 'user']);
+      pool.release();
+      return res.status(200).send(result);
     } catch (error) {
-      pool.release()
-      return res.status(500).send({ message: error.message })
+      pool.release();
+      return res.status(500).send({ message: error.message });
     }
   },
   changeProfilePass: async (req, res) => {
-    const { currentPass, newPass, confirmNewPass } = req.body
-    const { id } = req.params
-    const pool = await mysql.getConnection()
+    const { currentPass, newPass, confirmNewPass } = req.body;
+    const { id } = req.params;
+    const pool = await mysql.getConnection();
     try {
-      let sql = `select * from user where id = ?`
-      let [user] = await pool.query(sql, id)
+      let sql = `select * from user where id = ?`;
+      let [user] = await pool.query(sql, id);
       if (!user.length) {
-        pool.release()
-        throw { message: 'User is not found' }
+        pool.release();
+        throw { message: 'User is not found' };
       }
       const match = await bcrypt.compare(currentPass, user[0].password);
       if (!match) {
-        pool.release()
-        throw { message: 'input does not match current password' }
+        pool.release();
+        throw { message: 'input does not match current password' };
       }
       if (newPass != confirmNewPass) {
-        pool.release()
-        throw { message: 'password does not match' }
+        pool.release();
+        throw { message: 'password does not match' };
       }
-      const hashPassword = bcrypt.hashSync(newPass, saltRounds)
+      const hashPassword = bcrypt.hashSync(newPass, saltRounds);
       let updatePass = {
-        password: hashPassword
-      }
-      sql = `update user set ? where id = ?`
-      await pool.query(sql, [updatePass, id])
-      sql = `select * from user where id = ?`
-      let [result] = await pool.query(sql, id)
-      pool.release()
-      return res.status(200).send(result)
+        password: hashPassword,
+      };
+      sql = `update user set ? where id = ?`;
+      await pool.query(sql, [updatePass, id]);
+      sql = `select * from user where id = ?`;
+      let [result] = await pool.query(sql, id);
+      pool.release();
+      return res.status(200).send(result);
     } catch (error) {
-      pool.release()
-      return res.status(500).send({ message: error.message })
+      pool.release();
+      return res.status(500).send({ message: error.message });
     }
-  }
+  },
 };
