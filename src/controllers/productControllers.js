@@ -351,7 +351,7 @@ exports.getProductsPagination = async (req, res) => {
       if (filter === 'highest') {
         sql += ' order by productPriceRp desc';
       }
-      if (filter === 'default') {
+      if (filter === 'default' || !filter) {
         sql += ' order by p.createdAt desc';
       }
       sql += `) as sn where sn.productName like '${search}%' and sn.isDeleted = 0`;
@@ -386,7 +386,7 @@ exports.getProductsPagination = async (req, res) => {
     if (filter === 'highest') {
       sql += ' order by productPriceRp desc';
     }
-    if (filter === 'default') {
+    if (filter === 'default' || !filter) {
       sql += ' order by p.createdAt desc';
     }
     if (parseInt(kategori)) {
