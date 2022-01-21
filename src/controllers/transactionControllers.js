@@ -253,7 +253,7 @@ module.exports = {
       let [product] = await pool.query(sql, product_id);
 
       // cek stok
-      if (cekcart[0].qty + qty > product.stock) {
+      if (cekcart[0].qty + qty > product[0].stock) {
         pool.release();
         throw { message: "quantity can't exceed stock" };
       }
