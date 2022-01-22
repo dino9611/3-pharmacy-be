@@ -106,26 +106,24 @@ module.exports = {
     let conn, sql, updateData;
     try {
       conn = await mysql.getConnection();
+      await conn.beginTransaction();
       updateData = {
         status: nextStatus,
       };
-      sql = `
-      SELECT * FROM
-      prescribed_medicine 
-      WHERE prescription_id = ?;`;
-      const [result] = await conn.query(sql, id);
-      if (nextStatus === 'imgRej' && result.length) {
-        conn.release();
-        return res.status(400).send({
-          message: 'cannot reject without deleting medicine from prescription',
-        });
-      }
       sql = `update prescription set ? where id = ? `;
       await conn.query(sql, [updateData, id]);
+
+      if (nextStatus === 'imgRej') {
+        sql = 'CALL handle_prescription_payment_fail(?);';
+        await conn.query(sql, id);
+      }
+
+      await conn.commit();
       conn.release();
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
       console.log(error);
+      await conn.rollback();
       conn.release();
       res.status(500).send({ message: error.message || 'server error' });
     }
