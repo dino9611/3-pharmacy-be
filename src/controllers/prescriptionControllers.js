@@ -43,7 +43,10 @@ module.exports = {
             from prescription p 
             join user u 
             on p.user_id = u.id where true ${querySql} limit ?  offset ? ;`;
-      let [result] = await conn.query(sql, [parseInt(rowsPerPage), parseInt(offset)]);
+      let [result] = await conn.query(sql, [
+        parseInt(rowsPerPage),
+        parseInt(offset),
+      ]);
       conn.release();
       return res.status(200).send(result);
     } catch (error) {
@@ -226,7 +229,7 @@ module.exports = {
         }
       }
       if (search) sql += ` AND prescriptionName LIKE '%${search}%'`;
-      sql += ' LIMIT ?, ?';
+      sql += ' ORDER BY expiredAt DESC LIMIT ?, ?';
       parameters.push(page === undefined ? 0 : parseInt(page - 1));
       parameters.push(limit === undefined ? 10 : parseInt(limit));
       sql += ';';
@@ -291,18 +294,18 @@ module.exports = {
       res.status(500).send({ message: error.message || 'server error' });
     }
   },
-  prescriptionLength: async (req,res) => {
+  prescriptionLength: async (req, res) => {
     const { status } = req.query;
     let querySql = '';
-    let conn = await mysql.getConnection()
+    let conn = await mysql.getConnection();
     try {
-      if (status){
-        querySql += `and status = ${mysql.escape(status)}`
+      if (status) {
+        querySql += `and status = ${mysql.escape(status)}`;
       }
-      let sql  = `select count(*) prescription_length from prescription where true ${querySql} ` 
-      let [results] = await conn.query(sql)
-      conn.release()
-      return res.status(200).send(results)
+      let sql = `select count(*) prescription_length from prescription where true ${querySql} `;
+      let [results] = await conn.query(sql);
+      conn.release();
+      return res.status(200).send(results);
     } catch (error) {
       conn.release();
       console.log(error);
