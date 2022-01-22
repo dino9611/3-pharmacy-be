@@ -29,6 +29,10 @@ const uploadProof = uploader('/payment', 'PAY').fields([
   { name: 'prescription', maxCount: 3 },
 ]);
 
+// ? admin/user
+router.get('/historydetails/:order_id', historyDetails);
+router.get('/boughtproducts/:order_id', boughtProducts);
+
 // ? admin
 router.get('/adminorderlength', verifyAdmin, adminOrderLength);
 router.get('/admingetorder', verifyAdmin, adminGetOrder);
@@ -47,7 +51,5 @@ router.get('/getcheckout/:order_id', getCheckout);
 router.get('/orderlength/:user_id', orderLength);
 router.get('/getorder/:user_id/:offset', getOrder);
 router.patch('/paymentproof/:order_id', uploadProof, paymentProof);
-router.get('/historydetails/:order_id', historyDetails);
-router.get('/boughtproducts/:order_id', boughtProducts);
 
 module.exports = router;

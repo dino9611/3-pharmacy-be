@@ -886,7 +886,6 @@ module.exports = {
         pool.release();
         return res.status(200).send(result);
       }
-
     } catch (error) {
       pool.release();
       return res.status(500).send({ message: error.message });
@@ -897,10 +896,10 @@ module.exports = {
     const { limit } = req.body;
     let conn, sql;
     try {
-      const conn = await mysql.getConnection();
+      conn = await mysql.getConnection();
       const user_id = req.user.id;
 
-      sql = `update 3_pharmacy.order set ? where id = ? and user_id ?;`;
+      sql = `update 3_pharmacy.order set ? where id = ? and user_id = ?;`;
       const dataUpdate = { status: 'delivered' };
       await conn.query(sql, [dataUpdate, order_id, user_id]);
 
@@ -917,6 +916,7 @@ module.exports = {
       conn.release();
       return res.status(200).send(result);
     } catch (error) {
+      console.log(error);
       conn.release();
       return res.status(500).send({ message: error.message });
     }

@@ -103,14 +103,13 @@ module.exports = {
   updateStatus: async (req, res) => {
     const { id, nextStatus } = req.body;
 
-    let conn, sql, updateData;
+    let sql, updateData;
     try {
-      conn = await mysql.getConnection();
       updateData = {
         status: nextStatus,
       };
       sql = `update prescription set ? where id = ? `;
-      await conn.query(sql, [updateData, id]);
+      await mysql.query(sql, [updateData, id]);
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
       console.log(error);
@@ -120,14 +119,13 @@ module.exports = {
   updatePrescriptionName: async (req, res) => {
     const { id, prescriptionName } = req.body;
 
-    let conn, sql, updateData;
-    conn = await mysql.getConnection();
+    let sql, updateData;
     try {
       updateData = {
         prescriptionName,
       };
       sql = `update prescription set ? where id = ? `;
-      await conn.query(sql, [updateData, id]);
+      await mysql.query(sql, [updateData, id]);
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
       console.log(error);
@@ -266,6 +264,7 @@ module.exports = {
       };
       sql = `update prescription set ? where id = ? `;
       await conn.query(sql, [updateData, id]);
+      conn.release();
       return res.status(200).send({ message: 'berhasil' });
     } catch (error) {
       conn.release();
