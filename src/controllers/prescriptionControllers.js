@@ -229,7 +229,7 @@ module.exports = {
         }
       }
       if (search) sql += ` AND prescriptionName LIKE '%${search}%'`;
-      sql += ' ORDER BY expiredAt DESC LIMIT ?, ?';
+      sql += ' ORDER BY createdAt DESC LIMIT ?, ?';
       parameters.push(page === undefined ? 0 : parseInt(page - 1));
       parameters.push(limit === undefined ? 10 : parseInt(limit));
       sql += ';';
