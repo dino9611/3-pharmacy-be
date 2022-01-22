@@ -103,16 +103,30 @@ module.exports = {
   updateStatus: async (req, res) => {
     const { id, nextStatus } = req.body;
 
-    let sql, updateData;
+    let conn, sql, updateData;
     try {
+      conn = await mysql.getConnection();
       updateData = {
         status: nextStatus,
       };
+      sql = `
+      SELECT * FROM
+      prescribed_medicine 
+      WHERE prescription_id = ?;`;
+      const [result] = await conn.query(sql, id);
+      if (nextStatus === 'imgRej' && result.length) {
+        conn.release();
+        return res.status(400).send({
+          message: 'cannot reject without deleting medicine from prescription',
+        });
+      }
       sql = `update prescription set ? where id = ? `;
-      await mysql.query(sql, [updateData, id]);
+      await conn.query(sql, [updateData, id]);
+      conn.release();
       res.status(200).send({ message: 'berhasil' });
     } catch (error) {
       console.log(error);
+      conn.release();
       res.status(500).send({ message: error.message || 'server error' });
     }
   },
