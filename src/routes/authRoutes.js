@@ -4,7 +4,7 @@ const { authControllers } = require("../controllers")
 const { register, verifyAcc, sendVerifiedEmail, changePassword, passValidation } = authControllers
 const { verifyToken } = require('../helpers')
 const { verifyEmailToken } = verifyToken
-const { logIn, keepLoggedIn, userLength, userList, userDetail } = require('../controllers/authControllers')
+const { logIn, keepLoggedIn, userLength, userList, userDetail, changeProfilePass } = require('../controllers/authControllers')
 const { verifyAccessToken } = require("../helpers/verifyToken")
 
 
@@ -19,6 +19,7 @@ router.get("/keeploggedin", verifyAccessToken, keepLoggedIn)
 router.get('/userlength', userLength)
 router.get('/userlist', userList)
 router.get('/userdetail/:id', userDetail)
+router.patch('/changeprofilepass/:id', changeProfilePass)
 
 
 module.exports = router
